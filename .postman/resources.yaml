@@ -1,0 +1,13 @@
+# Use this workspace to collaborate
+workspace:
+  id: 48eb3573-5336-41a9-8605-359d50e706ae
+
+cloudResources:
+  collections:
+    ../postman/collections/Sweet Ice - API: 2c4b33b5-aef2-490e-99a3-3babaa741241
+
+# All resources in the `postman/` folder are automatically registered in Local View.
+# Point to additional files outside the `postman/` folder to register them individually. Example:
+#localResources:
+#  collections:
+#    - ../tests/E2E Test Collection/

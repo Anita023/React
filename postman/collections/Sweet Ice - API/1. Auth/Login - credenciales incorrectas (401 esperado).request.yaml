@@ -1,0 +1,20 @@
+$kind: http-request
+url: "{{base_url}}/login"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: text
+  content: |-
+    {
+      "correo": "{{correo_cliente}}",
+      "password": "contraseña-mal-puesta"
+    }
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test('Rechaza credenciales incorrectas (401)', function () {
+        pm.response.to.have.status(401);
+      });
+    language: text/javascript
+order: 5000

@@ -1,0 +1,11 @@
+$kind: http-request
+url: "{{base_url}}/perfil"
+method: GET
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test('Rechaza sin token (401)', function () {
+        pm.response.to.have.status(401);
+      });
+    language: text/javascript
+order: 7000

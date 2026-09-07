@@ -1,0 +1,18 @@
+$kind: http-request
+name: Actualizar usuario (datos/rol)
+url: "{{base_url}}/usuarios/{{usuario_id_cliente}}"
+method: PUT
+headers:
+  Content-Type: application/json
+  Authorization: Bearer {{token_admin}}
+body:
+  type: text
+  content: |-
+    {
+      "direccion": "Nueva dirección de prueba"
+    }
+scripts:
+  - type: afterResponse
+    code: pm.test('200 OK', function () { pm.response.to.have.status(200); });
+    language: text/javascript
+order: 2000

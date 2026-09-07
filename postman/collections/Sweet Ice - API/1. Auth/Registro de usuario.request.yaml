@@ -1,0 +1,26 @@
+$kind: http-request
+url: "{{base_url}}/registro"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: text
+  content: |-
+    {
+      "nombre": "Ana",
+      "apellido": "Gómez",
+      "tipoDocumento": "CC",
+      "numeroDocumento": "1020304050",
+      "direccion": "Calle 10 # 5-20",
+      "telefono": "3001234567",
+      "correo": "{{correo_cliente}}",
+      "password": "{{password_cliente}}"
+    }
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test('Registro exitoso (201)', function () {
+        pm.expect([201, 409]).to.include(pm.response.code);
+      });
+    language: text/javascript
+order: 1000

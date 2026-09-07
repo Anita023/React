@@ -1,0 +1,10 @@
+$kind: http-request
+url: "{{base_url}}/usuarios"
+method: GET
+headers:
+  Authorization: Bearer {{token_cliente}}
+scripts:
+  - type: afterResponse
+    code: pm.test('403 rol incorrecto', function () { pm.response.to.have.status(403); });
+    language: text/javascript
+order: 6000

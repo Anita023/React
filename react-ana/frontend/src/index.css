@@ -1,0 +1,100 @@
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Nunito:wght@400;500;600;700;800&display=swap');
+@import "tailwindcss";
+
+/* =========================================================
+   Sweet Ice — tokens de marca (heladería artesanal)
+   Paleta cálida y pastel: fresa, caramelo y pistacho
+   sobre base crema. Todo el diseño vive en Tailwind;
+   este bloque solo declara los tokens que Tailwind consume.
+========================================================= */
+
+/* =========================================================
+   Sweet Ice — tokens de marca (heladería artesanal)
+   Paleta extraída directamente del logo:
+   crema #FBF5E9 · durazno/rosa #DDC9C0 · azul cielo #D0E4EC
+   rosa claro #F7E7E4 · menta #B3E2CA · azul hielo #F6FAFC
+   Todo el diseño vive en Tailwind; este bloque solo declara
+   los tokens que Tailwind consume.
+========================================================= */
+
+@theme {
+  --font-display: "Fraunces", Georgia, serif;
+  --font-body: "Nunito", ui-sans-serif, system-ui, sans-serif;
+
+  /* Base — crema del logo */
+  --color-cream: #fbf5e9;
+  --color-cream-soft: #f7e7e4;
+  --color-vanilla: #f6fafc;
+
+  /* Rosa del logo (acento primario) */
+  --color-strawberry: #e8a3b0;
+  --color-strawberry-deep: #d67f8f;
+  --color-strawberry-soft: #f7e7e4;
+
+  /* Durazno/rosa-tierra del logo (acento secundario / CTA / texto principal) */
+  --color-caramel: #c7a392;
+  --color-caramel-deep: #7a5a4c;
+  --color-caramel-soft: #ddc9c0;
+
+  /* Menta del logo (acento terciario) */
+  --color-pistachio: #b3e2ca;
+  --color-pistachio-deep: #6fae86;
+  --color-pistachio-soft: #dcefe1;
+
+  /* Azul cielo del logo (acento cuaternario) */
+  --color-skyblue: #d0e4ec;
+  --color-skyblue-deep: #7fa8ba;
+  --color-skyblue-soft: #f6fafc;
+
+  /* Texto oscuro y bordes — derivados del tono durazno del logo
+     (necesarios para mantener contraste legible sobre fondos claros) */
+  --color-choco: #6e5045;
+  --color-choco-soft: #9c8478;
+  --color-border-soft: #ecddd3;
+
+  --shadow-soft: 0 10px 30px -12px rgb(110 80 69 / 0.18);
+  --shadow-lift: 0 18px 45px -14px rgb(110 80 69 / 0.24);
+
+  --radius-blob: 42% 58% 63% 37% / 41% 44% 56% 59%;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: var(--font-body);
+  background: var(--color-cream);
+  color: var(--color-caramel-deep);
+  -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3, h4 {
+  font-family: var(--font-display);
+  color: var(--color-caramel-deep);
+}
+
+::selection {
+  background: var(--color-strawberry-soft);
+  color: var(--color-choco);
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-caramel);
+  outline-offset: 3px;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes popIn {
+  from { opacity: 0; transform: translateY(10px) scale(0.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes carruselAparecer {
+  from { opacity: 0; transform: scale(1.03); }
+  to { opacity: 1; transform: scale(1); }
+}

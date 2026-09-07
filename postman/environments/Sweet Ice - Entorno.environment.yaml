@@ -1,0 +1,34 @@
+name: Sweet Ice - Entorno
+values:
+  - key: base_url
+    value: 'http://localhost:3000/api'
+  - key: correo_cliente
+    value: cliente.prueba@sweetice.com
+  - key: password_cliente
+    value: Cliente123
+  - key: correo_admin
+    value: TU-CORREO-ADMIN@ejemplo.com
+  - key: password_admin
+    value: TU-CONTRASEÑA-ADMIN
+  - key: correo_empleado
+    value: empleado.prueba@sweetice.com
+  - key: password_empleado
+    value: Empleado123
+  - key: token_cliente
+    value: ''
+  - key: token_admin
+    value: ''
+  - key: token_empleado
+    value: ''
+  - key: usuario_id_cliente
+    value: ''
+  - key: usuario_id_prueba
+    value: ''
+  - key: producto_id
+    value: ''
+  - key: servicio_id
+    value: ''
+  - key: carrito_item_id
+    value: ''
+  - key: pedido_id
+    value: ''

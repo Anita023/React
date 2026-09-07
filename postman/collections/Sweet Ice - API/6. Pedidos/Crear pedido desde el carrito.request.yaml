@@ -1,0 +1,14 @@
+$kind: http-request
+url: "{{base_url}}/pedidos"
+method: POST
+headers:
+  Authorization: Bearer {{token_cliente}}
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test('201 Creado', function () {
+        pm.response.to.have.status(201);
+        pm.environment.set('pedido_id', pm.response.json().pedidoId);
+      });
+    language: text/javascript
+order: 1000

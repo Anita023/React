@@ -1,0 +1,15 @@
+$kind: http-request
+url: "{{base_url}}/carrito"
+method: GET
+headers:
+  Authorization: Bearer {{token_cliente}}
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test('200 OK', function () { pm.response.to.have.status(200); });
+      const datos = pm.response.json();
+      if (datos.items && datos.items.length > 0) {
+        pm.environment.set('carrito_item_id', datos.items[0].item_id);
+      }
+    language: text/javascript
+order: 2000

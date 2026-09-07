@@ -1,0 +1,2 @@
+$kind: collection
+description: "Colección para el tercer avance: registro, login, JWT, CRUD de productos/servicios/usuarios, carrito, pedidos y pruebas de seguridad (401/403)."

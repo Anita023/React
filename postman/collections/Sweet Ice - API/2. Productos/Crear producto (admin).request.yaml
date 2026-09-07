@@ -1,0 +1,25 @@
+$kind: http-request
+url: "{{base_url}}/productos"
+method: POST
+headers:
+  Content-Type: application/json
+  Authorization: Bearer {{token_admin}}
+body:
+  type: text
+  content: |-
+    {
+      "slug": "pistacho",
+      "nombre": "Pistacho",
+      "descripcion": "Helado cremoso sabor pistacho",
+      "precio": 7000,
+      "imagen_url": "/img/helado-pistacho.jpg"
+    }
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test('Creado (201)', function () {
+        pm.response.to.have.status(201);
+        pm.environment.set('producto_id', pm.response.json().id);
+      });
+    language: text/javascript
+order: 3000

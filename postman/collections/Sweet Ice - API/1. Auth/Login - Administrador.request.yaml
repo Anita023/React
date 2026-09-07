@@ -1,0 +1,26 @@
+$kind: http-request
+url: "{{base_url}}/login"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: text
+  content: |-
+    {
+      "correo": "{{correo_admin}}",
+      "password": "{{password_admin}}",
+      "recordar": false
+    }
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test('Login admin exitoso (200)', function () {
+        pm.response.to.have.status(200);
+      });
+      pm.test('Rol es administrador', function () {
+        const datos = pm.response.json();
+        pm.expect(datos.usuario.rol).to.eql('administrador');
+        pm.environment.set('token_admin', datos.token);
+      });
+    language: text/javascript
+order: 3000

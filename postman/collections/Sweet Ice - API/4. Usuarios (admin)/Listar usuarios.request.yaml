@@ -1,0 +1,12 @@
+$kind: http-request
+url: "{{base_url}}/usuarios"
+method: GET
+headers:
+  Authorization: Bearer {{token_admin}}
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test('200 OK', function () { pm.response.to.have.status(200); });
+      pm.environment.set('usuario_id_prueba', pm.response.json().usuarios[0].id);
+    language: text/javascript
+order: 1000

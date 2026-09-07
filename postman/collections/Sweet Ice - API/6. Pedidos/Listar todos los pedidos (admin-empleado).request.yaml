@@ -1,0 +1,11 @@
+$kind: http-request
+name: Listar todos los pedidos (admin/empleado)
+url: "{{base_url}}/pedidos"
+method: GET
+headers:
+  Authorization: Bearer {{token_empleado}}
+scripts:
+  - type: afterResponse
+    code: pm.test('200 OK', function () { pm.response.to.have.status(200); });
+    language: text/javascript
+order: 3000

@@ -1,0 +1,15 @@
+# Entorno virtual
+venv/
+env/
+__pycache__/
+*.pyc
+
+# Variables de entorno (contienen información sensible)
+.env
+
+# Archivos de IDE
+.vscode/
+.idea/
+
+# Logs
+*.log

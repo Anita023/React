@@ -1,0 +1,27 @@
+$kind: http-request
+url: "{{base_url}}/login"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: text
+  content: |-
+    {
+      "correo": "{{correo_cliente}}",
+      "password": "{{password_cliente}}",
+      "recordar": false
+    }
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test('Login exitoso (200)', function () {
+        pm.response.to.have.status(200);
+      });
+      pm.test('Devuelve token JWT', function () {
+        const datos = pm.response.json();
+        pm.expect(datos.token).to.be.a('string');
+        pm.environment.set('token_cliente', datos.token);
+        pm.environment.set('usuario_id_cliente', datos.usuario.id);
+      });
+    language: text/javascript
+order: 2000
