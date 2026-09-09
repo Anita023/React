@@ -1,12 +1,87 @@
 from fastapi import APIRouter, Depends, HTTPException, status
+from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
+from ..auth import hash_password
 from ..database import get_db
 from ..dependencies import get_current_user, require_roles
 from ..models import Cliente, Usuario
 from ..schemas import UsuarioEstadoUpdate, UsuarioUpdate, usuario_a_out
 
 router = APIRouter(prefix="/api/usuarios", tags=["Usuarios"])
+
+ROLES_VALIDOS = ("cliente", "empleado", "administrador")
+
+
+class UsuarioCrearAdmin(BaseModel):
+    nombre: str
+    apellido: str
+    tipoDocumento: str
+    numeroDocumento: str
+    direccion: str
+    telefono: str
+    correo: str
+    password: str
+    confirmarPassword: str
+    rol: str = "cliente"
+
+
+@router.post("", status_code=status.HTTP_201_CREATED)
+def crear_usuario(
+    datos: UsuarioCrearAdmin,
+    db: Session = Depends(get_db),
+    usuario_actual: Usuario = Depends(require_roles("administrador")),
+):
+    """Un administrador crea una cuenta manualmente (sin pasar por /api/registro),
+    con los mismos datos que pide el registro público, más el rol. Crea fila en
+    `usuarios` y en `clientes`, igual que /api/registro."""
+    if datos.rol not in ROLES_VALIDOS:
+        raise HTTPException(status_code=400, detail="Rol inválido")
+
+    if datos.confirmarPassword != datos.password:
+        raise HTTPException(status_code=400, detail="Las contraseñas no coinciden")
+
+    if len(datos.password) < 8:
+        raise HTTPException(
+            status_code=400, detail="La contraseña debe tener al menos 8 caracteres"
+        )
+
+    if db.query(Usuario).filter(Usuario.correo == datos.correo).first():
+        raise HTTPException(status_code=400, detail="El correo ya está registrado")
+
+    if db.query(Cliente).filter(Cliente.numero_documento == datos.numeroDocumento).first():
+        raise HTTPException(status_code=400, detail="El número de documento ya está registrado")
+
+    try:
+        nuevo_usuario = Usuario(
+            nombre="",  # el nombre real vive en Cliente, igual que en /api/registro
+            correo=datos.correo,
+            password=hash_password(datos.password),
+            rol=datos.rol,
+            estado="activo",
+        )
+        db.add(nuevo_usuario)
+        db.flush()  # para obtener nuevo_usuario.id antes del commit
+
+        nuevo_cliente = Cliente(
+            usuario_id=nuevo_usuario.id,
+            nombre=datos.nombre,
+            apellido=datos.apellido,
+            tipo_documento=datos.tipoDocumento,
+            numero_documento=datos.numeroDocumento,
+            direccion=datos.direccion,
+            telefono=datos.telefono,
+        )
+        db.add(nuevo_cliente)
+        db.commit()
+        db.refresh(nuevo_usuario)
+        return {"usuario": usuario_a_out(nuevo_usuario)}
+    except ValueError as error:
+        db.rollback()
+        raise HTTPException(status_code=400, detail=str(error))
+    except Exception:
+        db.rollback()
+        raise HTTPException(status_code=500, detail="No fue posible crear el usuario")
 
 
 @router.get("")

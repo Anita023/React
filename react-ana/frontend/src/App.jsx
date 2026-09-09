@@ -1,4 +1,4 @@
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, useLocation } from "react-router-dom";
 
 import Inicio from "./pages/index";
 import Productos from "./pages/Productos";
@@ -19,6 +19,15 @@ import ClientePanel from "./pages/ClientePanel";
 import WhatsAppButton from "./components/WhatsAppButton";
 
 function App() {
+  const { pathname } = useLocation();
+
+  // El botón de WhatsApp no debe verse dentro de los paneles
+  // de administrador, empleado ni cliente.
+  const RUTAS_SIN_WHATSAPP = ["/admin", "/empleado", "/mi-cuenta"];
+  const ocultarWhatsApp = RUTAS_SIN_WHATSAPP.some((ruta) =>
+    pathname.startsWith(ruta)
+  );
+
   return (
     <>
       <Routes>
@@ -88,8 +97,8 @@ function App() {
         />
       </Routes>
 
-      {/* Botón flotante disponible en toda la aplicación */}
-      <WhatsAppButton numero="573001234567" />
+      {/* Botón flotante: en toda la app, excepto dentro de los paneles */}
+      {!ocultarWhatsApp && <WhatsAppButton numero="573001234567" />}
     </>
   );
 }

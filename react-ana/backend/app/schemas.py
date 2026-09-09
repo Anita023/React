@@ -312,4 +312,4 @@ class PedidoOut(BaseModel):
     nombre: Optional[str] = None
     apellido: Optional[str] = None
     correo: Optional[str] = None
-    detalles: Optional[list[DetallePedidoOut]] = None
+    detalles: Optional[list[DetallePedidoOut]] = None   

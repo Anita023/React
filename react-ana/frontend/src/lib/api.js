@@ -28,7 +28,24 @@ async function peticion(ruta, { method = "GET", body, token } = {}) {
   const datos = await respuesta.json().catch(() => ({}));
 
   if (!respuesta.ok) {
-    throw new Error(datos.mensaje || "Ocurrió un error inesperado");
+    let mensaje = datos.mensaje;
+
+    // FastAPI no manda "mensaje": manda "detail", como string o como lista
+    // de errores de validación (cada uno con su "msg" y su "loc").
+    if (!mensaje && datos.detail) {
+      if (typeof datos.detail === "string") {
+        mensaje = datos.detail;
+      } else if (Array.isArray(datos.detail)) {
+        mensaje = datos.detail
+          .map((d) => {
+            const campo = Array.isArray(d.loc) ? d.loc.at(-1) : null;
+            return campo ? `${campo}: ${d.msg}` : d.msg;
+          })
+          .join(" | ");
+      }
+    }
+
+    throw new Error(mensaje || "Ocurrió un error inesperado");
   }
 
   return datos;
@@ -155,6 +172,10 @@ export function obtenerUsuarios(token) {
   return peticion("/usuarios", { token });
 }
 
+export function crearUsuario(token, datos) {
+  return peticion("/usuarios", { method: "POST", token, body: datos });
+}
+
 export function obtenerUsuarioPorId(token, id) {
   return peticion(`/usuarios/${id}`, { token });
 }
@@ -213,6 +234,10 @@ export function crearPedidoDesdeCarrito(token, metodoPago = "efectivo") {
     token,
     body: { metodo_pago: metodoPago },
   });
+}
+
+export function crearPedidoManual(token, datos) {
+  return peticion("/pedidos/manual", { method: "POST", token, body: datos });
 }
 
 export function misPedidos(token) {
