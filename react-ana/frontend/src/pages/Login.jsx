@@ -128,112 +128,132 @@ function Login() {
 
   return (
     <main className="flex min-h-screen items-center justify-center bg-gradient-to-br from-cream via-cream-soft to-strawberry-soft px-4 py-16">
-      <div className="w-full max-w-md rounded-3xl bg-cream p-8 shadow-lift sm:p-10">
-        <div className="mb-6 text-center">
-          <Link
-            to="/"
-            className="mb-4 inline-flex items-center justify-center"
+      <div className="w-full max-w-md">
+        <Link
+          to="/"
+          className="mb-4 inline-flex items-center gap-2 text-sm font-semibold text-choco-soft hover:text-choco"
+        >
+          <svg
+            viewBox="0 0 24 24"
+            className="h-4 w-4 fill-none stroke-current"
+            strokeWidth="2"
           >
-            <img
-              src={logo}
-              alt="Sweet Ice"
-              className="h-32 w-32 rounded-full object-cover shadow-soft"
+            <path
+              d="M15 18l-6-6 6-6"
+              strokeLinecap="round"
+              strokeLinejoin="round"
             />
-          </Link>
+          </svg>
+          Volver al inicio
+        </Link>
 
-          <span className="mb-3 inline-block rounded-full bg-caramel-soft px-4 py-1 text-xs font-extrabold tracking-[0.2em] text-caramel-deep">
-            BIENVENIDO DE NUEVO
-          </span>
-
-          <h1 className="text-3xl font-semibold">Iniciar sesión</h1>
-          <p className="mt-1 text-choco-soft">
-            Ingresa y sigue disfrutando de tus sabores favoritos
-          </p>
-        </div>
-
-        <form onSubmit={manejarLogin} className="flex flex-col gap-4">
-          <Input
-            id="correo"
-            name="correo"
-            type="email"
-            label="Correo electrónico"
-            value={formulario.correo}
-            onChange={manejarCambio}
-            placeholder="correo@ejemplo.com"
-            error={errores.correo}
-            autoComplete="email"
-          />
-
-          <Input
-            id="password"
-            name="password"
-            type={verPassword ? "text" : "password"}
-            label="Contraseña"
-            value={formulario.password}
-            onChange={manejarCambio}
-            placeholder="Tu contraseña"
-            error={errores.password}
-            autoComplete="current-password"
-            rightSlot={
-              <button
-                type="button"
-                onClick={() => setVerPassword((prev) => !prev)}
-                aria-label={verPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
-                className="flex items-center"
-              >
-                <IconoOjo visible={verPassword} />
-              </button>
-            }
-          />
-
-          <div className="flex items-center justify-between text-sm">
-            <label className="flex items-center gap-2 font-semibold text-choco-soft">
-              <input
-                type="checkbox"
-                name="recordar"
-                checked={formulario.recordar}
-                onChange={manejarCambio}
-                className="h-4 w-4 rounded accent-caramel"
-              />
-              Recordarme
-            </label>
-
-            <button
-              type="button"
-              onClick={() => setMostrarRecuperar(true)}
-              className="font-bold text-caramel-deep hover:underline"
+        <div className="rounded-3xl bg-cream p-8 shadow-lift sm:p-10">
+          <div className="mb-6 text-center">
+            <Link
+              to="/"
+              className="mb-4 inline-flex items-center justify-center"
             >
-              ¿Olvidaste tu contraseña?
-            </button>
+              <img
+                src={logo}
+                alt="Sweet Ice"
+                className="h-32 w-32 rounded-full object-cover shadow-soft"
+              />
+            </Link>
+
+            <span className="mb-3 inline-block rounded-full bg-caramel-soft px-4 py-1 text-xs font-extrabold tracking-[0.2em] text-caramel-deep">
+              BIENVENIDO DE NUEVO
+            </span>
+
+            <h1 className="text-3xl font-semibold">Iniciar sesión</h1>
+            <p className="mt-1 text-choco-soft">
+              Ingresa y sigue disfrutando de tus sabores favoritos
+            </p>
           </div>
 
-          {mensaje && (
-            <div
-              className={`rounded-2xl border px-4 py-3 text-sm font-semibold ${
-                mensaje.startsWith("❌")
-                  ? "border-strawberry-deep bg-strawberry-soft text-strawberry-deep"
-                  : "border-pistachio bg-pistachio-soft text-pistachio-deep"
-              }`}
-            >
-              {mensaje}
+          <form onSubmit={manejarLogin} className="flex flex-col gap-4">
+            <Input
+              id="correo"
+              name="correo"
+              type="email"
+              label="Correo electrónico"
+              value={formulario.correo}
+              onChange={manejarCambio}
+              placeholder="correo@ejemplo.com"
+              error={errores.correo}
+              autoComplete="email"
+            />
+
+            <Input
+              id="password"
+              name="password"
+              type={verPassword ? "text" : "password"}
+              label="Contraseña"
+              value={formulario.password}
+              onChange={manejarCambio}
+              placeholder="Tu contraseña"
+              error={errores.password}
+              autoComplete="current-password"
+              rightSlot={
+                <button
+                  type="button"
+                  onClick={() => setVerPassword((prev) => !prev)}
+                  aria-label={verPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
+                  className="flex items-center"
+                >
+                  <IconoOjo visible={verPassword} />
+                </button>
+              }
+            />
+
+            <div className="flex items-center justify-between text-sm">
+              <label className="flex items-center gap-2 font-semibold text-choco-soft">
+                <input
+                  type="checkbox"
+                  name="recordar"
+                  checked={formulario.recordar}
+                  onChange={manejarCambio}
+                  className="h-4 w-4 rounded accent-caramel"
+                />
+                Recordarme
+              </label>
+
+              <button
+                type="button"
+                onClick={() => setMostrarRecuperar(true)}
+                className="font-bold text-caramel-deep hover:underline"
+              >
+                ¿Olvidaste tu contraseña?
+              </button>
             </div>
-          )}
 
-          <Button type="submit" disabled={cargando} className="w-full">
-            {cargando ? "Iniciando sesión..." : "Iniciar sesión"}
-          </Button>
+            {mensaje && (
+              <div
+                className={`rounded-2xl border px-4 py-3 text-sm font-semibold ${
+                  mensaje.startsWith("❌")
+                    ? "border-strawberry-deep bg-strawberry-soft text-strawberry-deep"
+                    : "border-pistachio bg-pistachio-soft text-pistachio-deep"
+                }`}
+              >
+                {mensaje}
+              </div>
+            )}
 
-          <p className="mt-1 text-center text-sm text-choco-soft">
-            ¿No tienes una cuenta?{" "}
-            <button
-              type="button"
-              onClick={() => setMostrarRegistro(true)}
-              className="font-bold text-strawberry-deep hover:underline"
-            >
-              Crear una cuenta
-            </button>
-          </p>
-        </form>
+            <Button type="submit" disabled={cargando} className="w-full">
+              {cargando ? "Iniciando sesión..." : "Iniciar sesión"}
+            </Button>
+
+            <p className="mt-1 text-center text-sm text-choco-soft">
+              ¿No tienes una cuenta?{" "}
+              <button
+                type="button"
+                onClick={() => setMostrarRegistro(true)}
+                className="font-bold text-strawberry-deep hover:underline"
+              >
+                Crear una cuenta
+              </button>
+            </p>
+          </form>
+        </div>
       </div>
 
       {/* Modal de registro */}

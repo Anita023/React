@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import Input from "./Input";
 import Select from "./Select";
 import Button from "./Button";
@@ -189,11 +190,13 @@ function RegisterForm({ onRegistroExitoso }) {
   return (
     <div>
       <div className="mb-4 flex justify-center">
-        <img
-          src={logo}
-          alt="Sweet Ice"
-          className="h-28 w-28 rounded-full object-cover shadow-soft"
-        />
+        <Link to="/" className="inline-flex items-center justify-center">
+          <img
+            src={logo}
+            alt="Sweet Ice"
+            className="h-28 w-28 rounded-full object-cover shadow-soft"
+          />
+        </Link>
       </div>
 
       <span className="mb-3 inline-block rounded-full bg-strawberry-soft px-4 py-1 text-xs font-extrabold tracking-[0.2em] text-strawberry-deep">
