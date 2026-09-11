@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useAuth } from "../../context/AuthContext";
 import PanelToolbar from "../../components/admin/PanelToolbar";
 import PanelModal from "../../components/admin/PanelModal";
+import ConfirmModal from "../../components/admin/ConfirmModal";
 import {
   obtenerUsuarios,
   crearUsuario,
@@ -80,6 +81,7 @@ export default function AdminUsuarios({
   const [tocados, setTocados] = useState({});
   const [verPassword, setVerPassword] = useState(false);
   const [verConfirmarPassword, setVerConfirmarPassword] = useState(false);
+  const [usuarioAEliminar, setUsuarioAEliminar] = useState(null);
 
   function validarCampo(nombre, valor, formularioActual) {
     switch (nombre) {
@@ -265,23 +267,23 @@ export default function AdminUsuarios({
     }
   }
 
-  async function manejarEliminar(id) {
-    if (
-      !window.confirm(
-        "¿Eliminar este usuario permanentemente? Se recomienda usar 'Desactivar' en su lugar."
-      )
-    ) {
-      return;
-    }
+  function manejarEliminar(usuario) {
+    setUsuarioAEliminar(usuario);
+  }
+
+  async function confirmarEliminar() {
+    if (!usuarioAEliminar) return;
 
     setMensaje("");
     setError("");
     try {
-      await eliminarUsuario(token, id);
+      await eliminarUsuario(token, usuarioAEliminar.id);
       setMensaje("Usuario eliminado");
       cargarUsuarios();
     } catch (err) {
       setError(err.message);
+    } finally {
+      setUsuarioAEliminar(null);
     }
   }
 
@@ -376,7 +378,7 @@ export default function AdminUsuarios({
                             {usuario.estado === "activo" ? "Desactivar" : "Activar"}
                           </button>
                           <button
-                            onClick={() => manejarEliminar(usuario.id)}
+                            onClick={() => manejarEliminar(usuario)}
                             disabled={esUsuarioActual}
                             className="text-[--color-strawberry-deep] hover:underline disabled:text-[--color-choco-soft]/40"
                           >
@@ -571,6 +573,19 @@ export default function AdminUsuarios({
           </div>
         </form>
       </PanelModal>
+
+      <ConfirmModal
+        abierto={Boolean(usuarioAEliminar)}
+        titulo="Eliminar usuario"
+        mensaje={
+          usuarioAEliminar
+            ? `¿Eliminar permanentemente a "${usuarioAEliminar.nombre || usuarioAEliminar.correo}"? Se recomienda usar "Desactivar" en su lugar.`
+            : ""
+        }
+        textoConfirmar="Eliminar"
+        onConfirmar={confirmarEliminar}
+        onCancelar={() => setUsuarioAEliminar(null)}
+      />
     </div>
   );
 }

@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useAuth } from "../../context/AuthContext";
 import PanelToolbar from "../../components/admin/PanelToolbar";
 import PanelModal from "../../components/admin/PanelModal";
+import ConfirmModal from "../../components/admin/ConfirmModal";
 import {
   obtenerProductosAdmin,
   crearProducto,
@@ -46,6 +47,7 @@ export default function AdminProductos({
   const [erroresCampos, setErroresCampos] = useState({});
   const [tocados, setTocados] = useState({});
   const [previewImagen, setPreviewImagen] = useState("");
+  const [productoAEliminar, setProductoAEliminar] = useState(null);
 
   function validarCampo(nombre, valor) {
     switch (nombre) {
@@ -278,18 +280,22 @@ export default function AdminProductos({
     }
   }
 
-  async function manejarEliminar(id) {
-    if (!window.confirm("¿Eliminar este producto? Esta acción no se puede deshacer.")) {
-      return;
-    }
+  function manejarEliminar(producto) {
+    setProductoAEliminar(producto);
+  }
+
+  async function confirmarEliminar() {
+    if (!productoAEliminar) return;
 
     try {
-      await eliminarProducto(token, id);
+      await eliminarProducto(token, productoAEliminar.id);
       setMensaje("Producto eliminado");
       cargarProductos();
     } catch (err) {
       // Si ya tiene pedidos asociados, el backend devuelve un mensaje claro
       setError(err.message);
+    } finally {
+      setProductoAEliminar(null);
     }
   }
 
@@ -365,24 +371,28 @@ export default function AdminProductos({
                       </span>
                     </td>
                     <td className="space-x-3 px-4 py-3">
-                      <button
-                        onClick={() => iniciarEdicion(producto)}
-                        className="text-[#0369a1] hover:underline"
-                      >
-                        Editar
-                      </button>
+                      {esAdmin && (
+                        <button
+                          onClick={() => iniciarEdicion(producto)}
+                          className="text-[#0369a1] hover:underline"
+                        >
+                          Editar
+                        </button>
+                      )}
                       <button
                         onClick={() => alternarDisponibilidad(producto)}
                         className="text-[#b45309] hover:underline"
                       >
                         {producto.disponible ? "Desactivar" : "Activar"}
                       </button>
-                      <button
-                        onClick={() => manejarEliminar(producto.id)}
-                        className="text-[--color-strawberry-deep] hover:underline"
-                      >
-                        Eliminar
-                      </button>
+                      {esAdmin && (
+                        <button
+                          onClick={() => manejarEliminar(producto)}
+                          className="text-[--color-strawberry-deep] hover:underline"
+                        >
+                          Eliminar
+                        </button>
+                      )}
                     </td>
                   </tr>
                 ))}
@@ -524,6 +534,19 @@ export default function AdminProductos({
           </div>
         </form>
       </PanelModal>
+
+      <ConfirmModal
+        abierto={Boolean(productoAEliminar)}
+        titulo="Eliminar producto"
+        mensaje={
+          productoAEliminar
+            ? `¿Eliminar "${productoAEliminar.nombre}"? Esta acción no se puede deshacer.`
+            : ""
+        }
+        textoConfirmar="Eliminar"
+        onConfirmar={confirmarEliminar}
+        onCancelar={() => setProductoAEliminar(null)}
+      />
     </div>
   );
 }

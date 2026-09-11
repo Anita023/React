@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useAuth } from "../../context/AuthContext";
 import PanelToolbar from "../../components/admin/PanelToolbar";
 import PanelModal from "../../components/admin/PanelModal";
+import ConfirmModal from "../../components/admin/ConfirmModal";
 import {
   obtenerServiciosAdmin,
   crearServicio,
@@ -39,6 +40,7 @@ export default function AdminServicios({
   const [enviando, setEnviando] = useState(false);
   const [erroresCampos, setErroresCampos] = useState({});
   const [tocados, setTocados] = useState({});
+  const [servicioAEliminar, setServicioAEliminar] = useState(null);
 
   function validarCampo(nombre, valor) {
     switch (nombre) {
@@ -199,15 +201,21 @@ export default function AdminServicios({
     }
   }
 
-  async function manejarEliminar(id) {
-    if (!window.confirm("¿Eliminar este servicio?")) return;
+  function manejarEliminar(servicio) {
+    setServicioAEliminar(servicio);
+  }
+
+  async function confirmarEliminar() {
+    if (!servicioAEliminar) return;
 
     try {
-      await eliminarServicio(token, id);
+      await eliminarServicio(token, servicioAEliminar.id);
       setMensaje("Servicio eliminado");
       cargarServicios();
     } catch (err) {
       setError(err.message);
+    } finally {
+      setServicioAEliminar(null);
     }
   }
 
@@ -285,12 +293,14 @@ export default function AdminServicios({
                       </span>
                     </td>
                     <td className="space-x-3 px-4 py-3">
-                      <button
-                        onClick={() => iniciarEdicion(servicio)}
-                        className="text-[#0369a1] hover:underline"
-                      >
-                        Editar
-                      </button>
+                      {esAdmin && (
+                        <button
+                          onClick={() => iniciarEdicion(servicio)}
+                          className="text-[#0369a1] hover:underline"
+                        >
+                          Editar
+                        </button>
+                      )}
                       {esAdmin && (
                         <>
                           <button
@@ -300,7 +310,7 @@ export default function AdminServicios({
                             {servicio.disponible ? "Desactivar" : "Activar"}
                           </button>
                           <button
-                            onClick={() => manejarEliminar(servicio.id)}
+                            onClick={() => manejarEliminar(servicio)}
                             className="text-[--color-strawberry-deep] hover:underline"
                           >
                             Eliminar
@@ -399,6 +409,19 @@ export default function AdminServicios({
           </div>
         </form>
       </PanelModal>
+
+      <ConfirmModal
+        abierto={Boolean(servicioAEliminar)}
+        titulo="Eliminar servicio"
+        mensaje={
+          servicioAEliminar
+            ? `¿Eliminar "${servicioAEliminar.nombre}"? Esta acción no se puede deshacer.`
+            : ""
+        }
+        textoConfirmar="Eliminar"
+        onConfirmar={confirmarEliminar}
+        onCancelar={() => setServicioAEliminar(null)}
+      />
     </div>
   );
 }
