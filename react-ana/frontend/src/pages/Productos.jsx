@@ -110,6 +110,11 @@ function Productos() {
     }
   };
 
+  const irAlCarrito = () => {
+    setCarritoAbierto(false);
+    navigate("/carrito");
+  };
+
   const totalItems = itemsCarrito.reduce((sum, item) => sum + item.cantidad, 0);
 
   // FIXED: Completed the function and added missing closing brace
@@ -297,6 +302,13 @@ function Productos() {
                     {numeroAPrecio(totalCarrito)}
                   </strong>
                 </div>
+
+                <button
+                  onClick={irAlCarrito}
+                  className="mt-5 w-full rounded-full bg-caramel py-3.5 text-sm font-bold text-white shadow-soft transition-all hover:-translate-y-0.5 hover:bg-caramel-deep"
+                >
+                  Continuar con el pedido
+                </button>
               </>
             )}
           </aside>
