@@ -10,6 +10,13 @@ import {
   eliminarProducto,
 } from "../../lib/api";
 
+// VITE_API_URL ya incluye "/api" al final (ej: http://localhost:8000/api),
+// así que URL_BASE_API se usa tal cual para las rutas de /api/... y
+// URL_BASE_SERVIDOR (sin /api) se usa para construir URLs de imágenes servidas
+// como estáticas (ej: http://localhost:8000/uploads/productos/xxx.jpg).
+const URL_BASE_API = import.meta.env.VITE_API_URL || "http://localhost:8000/api";
+const URL_BASE_SERVIDOR = URL_BASE_API.replace(/\/api\/?$/, "");
+
 const FORMULARIO_VACIO = {
   slug: "",
   nombre: "",
@@ -47,6 +54,10 @@ export default function AdminProductos({
   const [erroresCampos, setErroresCampos] = useState({});
   const [tocados, setTocados] = useState({});
   const [previewImagen, setPreviewImagen] = useState("");
+
+  // NUEVO: guardamos el archivo real seleccionado (no el base64) para subirlo al enviar el formulario.
+  const [archivoImagen, setArchivoImagen] = useState(null);
+
   const [productoAEliminar, setProductoAEliminar] = useState(null);
 
   function validarCampo(nombre, valor) {
@@ -70,12 +81,10 @@ export default function AdminProductos({
         if (valor.trim().length < 5) return "Escribe una descripción un poco más larga";
         return "";
       case "imagen_url":
-        if (
-          valor.trim() &&
-          !/^https?:\/\/.+/i.test(valor.trim()) &&
-          !/^data:image\/.+;base64,/.test(valor.trim())
-        )
-          return "Selecciona una imagen válida";
+        // Ya no validamos formato aquí: el valor real que viaja en el formulario
+        // ahora es la URL que devuelve el backend después de subir el archivo,
+        // no el contenido de la imagen. La validación del archivo en sí ocurre
+        // en manejarSeleccionImagen.
         return "";
       default:
         return "";
@@ -116,6 +125,8 @@ export default function AdminProductos({
     setErrorFormulario("");
     setErroresCampos({});
     setTocados({});
+    setArchivoImagen(null);
+    setPreviewImagen("");
     setMostrarFormulario(true);
   }
 
@@ -166,7 +177,12 @@ export default function AdminProductos({
     setFormulario(datosFormulario);
     setErroresCampos(validarTodo(datosFormulario));
     setTocados({});
-    setPreviewImagen(producto.imagen_url || "");
+    setArchivoImagen(null);
+    // Si imagen_url ya es una ruta del backend (ej: /uploads/productos/xxx.jpg),
+    // armamos la URL completa para la vista previa.
+    setPreviewImagen(
+      producto.imagen_url ? construirUrlImagen(producto.imagen_url) : ""
+    );
     setMensaje("");
     setErrorFormulario("");
     setMostrarFormulario(true);
@@ -178,8 +194,19 @@ export default function AdminProductos({
     setErrorFormulario("");
     setErroresCampos({});
     setTocados({});
+    setArchivoImagen(null);
     setPreviewImagen("");
     setMostrarFormulario(false);
+  }
+
+  // Arma la URL completa para <img src>, sea que imagen_url venga como ruta relativa
+  // del backend (/uploads/...) o como URL absoluta (http...).
+  function construirUrlImagen(imagenUrl) {
+    if (!imagenUrl) return "";
+    if (/^https?:\/\//i.test(imagenUrl) || imagenUrl.startsWith("data:")) {
+      return imagenUrl;
+    }
+    return `${URL_BASE_API}${imagenUrl}`;
   }
 
   function manejarSeleccionImagen(e) {
@@ -204,24 +231,55 @@ export default function AdminProductos({
       return;
     }
 
+    // Guardamos el archivo real: esto es lo que se sube al backend al enviar el formulario.
+    setArchivoImagen(archivo);
+
+    // La vista previa local sigue usando FileReader, pero SOLO para mostrarla en pantalla,
+    // nunca se guarda este resultado como imagen_url.
     const lector = new FileReader();
     lector.onload = () => {
-      const resultado = lector.result;
-      setFormulario((prev) => ({ ...prev, imagen_url: resultado }));
-      setPreviewImagen(resultado);
-      setTocados((prev) => ({ ...prev, imagen_url: true }));
-      setErroresCampos((prev) => {
-        const siguiente = { ...prev };
-        delete siguiente.imagen_url;
-        return siguiente;
-      });
+      setPreviewImagen(lector.result);
     };
     lector.readAsDataURL(archivo);
+
+    setTocados((prev) => ({ ...prev, imagen_url: true }));
+    setErroresCampos((prev) => {
+      const siguiente = { ...prev };
+      delete siguiente.imagen_url;
+      return siguiente;
+    });
   }
 
   function quitarImagen() {
-    setFormulario((prev) => ({ ...prev, imagen_url: "" }));
+    setArchivoImagen(null);
     setPreviewImagen("");
+    setFormulario((prev) => ({ ...prev, imagen_url: "" }));
+  }
+
+  // Sube el archivo seleccionado al backend y devuelve la URL (ruta relativa) que
+  // debe guardarse en imagen_url. Si no hay archivo nuevo seleccionado, no hace nada.
+  async function subirImagenSiHayArchivo() {
+    if (!archivoImagen) return null;
+
+    const formData = new FormData();
+    formData.append("archivo", archivoImagen);
+
+    const respuesta = await fetch(`${URL_BASE_API}/uploads/imagen`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        // OJO: no pongas Content-Type manual; el navegador arma el boundary del multipart solo.
+      },
+      body: formData,
+    });
+
+    if (!respuesta.ok) {
+      const datosError = await respuesta.json().catch(() => ({}));
+      throw new Error(datosError.detail || "No se pudo subir la imagen");
+    }
+
+    const datos = await respuesta.json();
+    return datos.url; // ej: "/uploads/productos/abc123.jpg"
   }
 
   async function manejarEnvio(e) {
@@ -245,13 +303,21 @@ export default function AdminProductos({
 
     setEnviando(true);
 
-    const datosAEnviar = {
-      ...formulario,
-      precio: Number(formulario.precio),
-      imagen_url: formulario.imagen_url.trim() ? formulario.imagen_url.trim() : null,
-    };
-
     try {
+      // 1. Si el usuario seleccionó una imagen nueva, la subimos primero.
+      let imagenUrlFinal = formulario.imagen_url.trim() || null;
+      if (archivoImagen) {
+        imagenUrlFinal = await subirImagenSiHayArchivo();
+      }
+
+      // 2. Creamos/actualizamos el producto con la URL corta que devolvió el backend
+      //    (no con el base64).
+      const datosAEnviar = {
+        ...formulario,
+        precio: Number(formulario.precio),
+        imagen_url: imagenUrlFinal,
+      };
+
       if (editandoId) {
         await actualizarProducto(token, editandoId, datosAEnviar);
         setMensaje("Producto actualizado correctamente");

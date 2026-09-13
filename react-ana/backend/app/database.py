@@ -14,8 +14,8 @@ if not DATABASE_URL:
 
 engine = create_engine(
     DATABASE_URL,
-    echo=False,          # cambia a True si quieres ver el SQL generado en consola
-    pool_pre_ping=True,  # evita errores por conexiones caídas (MySQL "gone away")
+    echo=False,          
+    pool_pre_ping=True, 
 )
 
 SessionLocal = sessionmaker(

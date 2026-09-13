@@ -3,9 +3,10 @@ import os
 from dotenv import load_dotenv
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 
 from .database import Base, engine
-from .routes import auth, carrito, pedidos, productos, servicios, usuarios
+from .routes import auth, carrito, pedidos, productos, servicios, usuarios, uploads
 
 load_dotenv()
 
@@ -37,6 +38,13 @@ app.include_router(productos.router)
 app.include_router(servicios.router)
 app.include_router(carrito.router)
 app.include_router(pedidos.router)
+app.include_router(uploads.router)
+
+# Sirve la carpeta uploads/ como archivos estáticos.
+# Con esto, un archivo guardado en uploads/productos/abc123.jpg queda disponible en:
+# http://localhost:8000/uploads/productos/abc123.jpg
+os.makedirs("uploads", exist_ok=True)
+app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
 
 
 @app.get("/")

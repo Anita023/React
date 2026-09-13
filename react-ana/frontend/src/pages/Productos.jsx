@@ -16,9 +16,26 @@ function numeroAPrecio(numero) {
   return "$" + Number(numero).toLocaleString("es-CO");
 }
 
+// VITE_API_URL incluye "/api" al final (ej: http://localhost:8000/api).
+// Le quitamos el "/api" para construir URLs de archivos estáticos servidos
+// desde /uploads (ej: http://localhost:8000/uploads/productos/xxx.jpg).
+const URL_BASE_API = import.meta.env.VITE_API_URL || "http://localhost:8000/api";
+const URL_BASE_SERVIDOR = URL_BASE_API.replace(/\/api\/?$/, "");
+
+function construirUrlImagen(imagenUrl) {
+  if (!imagenUrl) return null;
+  if (/^https?:\/\//i.test(imagenUrl) || imagenUrl.startsWith("data:")) {
+    return imagenUrl;
+  }
+  return `${URL_BASE_SERVIDOR}${imagenUrl}`;
+}
+
 function conImagenLocal(productoApi) {
   const local = sabores.find((s) => s.id === productoApi.slug);
-  return { ...productoApi, imagen: local?.imagen ?? null };
+  // Prioridad: imagen local predefinida (assets del proyecto) > imagen subida
+  // desde el panel admin (imagen_url) > sin imagen.
+  const imagen = local?.imagen ?? construirUrlImagen(productoApi.imagen_url);
+  return { ...productoApi, imagen };
 }
 
 function Productos() {
