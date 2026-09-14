@@ -313,3 +313,143 @@ class PedidoOut(BaseModel):
     apellido: Optional[str] = None
     correo: Optional[str] = None
     detalles: Optional[list[DetallePedidoOut]] = None   
+
+
+# ---------------------------------------------------------------------------
+# VENTAS
+# ---------------------------------------------------------------------------
+class VentaItemCreate(BaseModel):
+    """Un item de la venta: debe traer producto_id O servicio_id, nunca ambos ni ninguno."""
+
+    producto_id: Optional[int] = None
+    servicio_id: Optional[int] = None
+    cantidad: int = Field(gt=0, default=1)
+
+    @field_validator("servicio_id")
+    @classmethod
+    def validar_uno_solo(cls, v, info):
+        producto_id = info.data.get("producto_id")
+        if bool(v) == bool(producto_id):
+            raise ValueError("Cada item debe tener producto_id o servicio_id (uno solo, no ambos)")
+        return v
+
+
+class VentaCreate(BaseModel):
+    cliente_id: int
+    pedido_id: Optional[int] = None
+    descuento: Decimal = Field(default=Decimal("0"), ge=0)
+    impuestos: Decimal = Field(default=Decimal("0"), ge=0)
+    items: list[VentaItemCreate] = Field(min_length=1)
+
+
+class VentaEstadoUpdate(BaseModel):
+    estado: str
+
+    @field_validator("estado")
+    @classmethod
+    def validar_estado(cls, v: str) -> str:
+        permitidos = {"pendiente", "completada", "anulada"}
+        if v not in permitidos:
+            raise ValueError(f"estado debe ser uno de: {', '.join(permitidos)}")
+        return v
+
+
+class DetalleVentaOut(BaseModel):
+    id: int
+    producto_id: Optional[int] = None
+    servicio_id: Optional[int] = None
+    nombre_item: str
+    cantidad: int
+    precio_unitario: Decimal
+    subtotal: Decimal
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class VentaOut(BaseModel):
+    id: int
+    cliente_id: int
+    usuario_id: Optional[int] = None
+    pedido_id: Optional[int] = None
+    subtotal: Decimal
+    descuento: Decimal
+    impuestos: Decimal
+    total: Decimal
+    estado: str
+    creado_en: Optional[datetime] = None
+    cliente_nombre: Optional[str] = None
+    detalles: Optional[list[DetalleVentaOut]] = None
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+def venta_a_out(v) -> VentaOut:
+    cliente_nombre = None
+    if v.cliente:
+        cliente_nombre = f"{v.cliente.nombre} {v.cliente.apellido}"
+
+    return VentaOut(
+        id=v.id,
+        cliente_id=v.cliente_id,
+        usuario_id=v.usuario_id,
+        pedido_id=v.pedido_id,
+        subtotal=v.subtotal,
+        descuento=v.descuento,
+        impuestos=v.impuestos,
+        total=v.total,
+        estado=v.estado,
+        creado_en=v.creado_en,
+        cliente_nombre=cliente_nombre,
+        detalles=[DetalleVentaOut.model_validate(d) for d in v.detalles] if v.detalles else None,
+    )
+
+
+# ---------------------------------------------------------------------------
+# FACTURACIÓN (Quinto Avance)
+# ---------------------------------------------------------------------------
+class DetalleFacturaOut(BaseModel):
+    id: int
+    nombre_item: str
+    cantidad: int
+    precio_unitario: Decimal
+    subtotal: Decimal
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class FacturaOut(BaseModel):
+    id: int
+    venta_id: int
+    numero_factura: str
+    subtotal: Decimal
+    impuestos: Decimal
+    total: Decimal
+    estado: str
+    creado_en: Optional[datetime] = None
+    cliente_nombre: Optional[str] = None
+    cliente_documento: Optional[str] = None
+    detalles: Optional[list[DetalleFacturaOut]] = None
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+def factura_a_out(f) -> FacturaOut:
+    cliente_nombre = None
+    cliente_documento = None
+    if f.venta and f.venta.cliente:
+        cliente_nombre = f"{f.venta.cliente.nombre} {f.venta.cliente.apellido}"
+        cliente_documento = f.venta.cliente.numero_documento
+
+    return FacturaOut(
+        id=f.id,
+        venta_id=f.venta_id,
+        numero_factura=f.numero_factura,
+        subtotal=f.subtotal,
+        impuestos=f.impuestos,
+        total=f.total,
+        estado=f.estado,
+        creado_en=f.creado_en,
+        cliente_nombre=cliente_nombre,
+        cliente_documento=cliente_documento,
+        detalles=[DetalleFacturaOut.model_validate(d) for d in f.detalles] if f.detalles else None,
+    )

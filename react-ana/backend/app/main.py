@@ -6,7 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
 from .database import Base, engine
-from .routes import auth, carrito, pedidos, productos, servicios, usuarios, uploads
+from .routes import auth, carrito, pedidos, productos, servicios, usuarios, uploads, ventas, reportes, facturas, dashboard
 
 load_dotenv()
 
@@ -39,6 +39,10 @@ app.include_router(servicios.router)
 app.include_router(carrito.router)
 app.include_router(pedidos.router)
 app.include_router(uploads.router)
+app.include_router(ventas.router)
+app.include_router(reportes.router)
+app.include_router(facturas.router)
+app.include_router(dashboard.router)
 
 # Sirve la carpeta uploads/ como archivos estáticos.
 # Con esto, un archivo guardado en uploads/productos/abc123.jpg queda disponible en:
