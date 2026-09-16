@@ -453,3 +453,92 @@ def factura_a_out(f) -> FacturaOut:
         cliente_documento=cliente_documento,
         detalles=[DetalleFacturaOut.model_validate(d) for d in f.detalles] if f.detalles else None,
     )
+
+# ---------------------------------------------------------------------------
+# PQR (Quinto Avance)
+# ---------------------------------------------------------------------------
+class PQRCreate(BaseModel):
+    tipo: str
+    asunto: str = Field(min_length=3, max_length=120)
+    descripcion: str = Field(min_length=5)
+
+    @field_validator("tipo")
+    @classmethod
+    def validar_tipo(cls, v: str) -> str:
+        permitidos = {"peticion", "queja", "reclamo", "sugerencia"}
+        if v not in permitidos:
+            raise ValueError(f"tipo debe ser uno de: {', '.join(permitidos)}")
+        return v
+
+
+class PQREstadoUpdate(BaseModel):
+    estado: str
+
+    @field_validator("estado")
+    @classmethod
+    def validar_estado(cls, v: str) -> str:
+        permitidos = {"pendiente", "en_proceso", "respondida", "cerrada"}
+        if v not in permitidos:
+            raise ValueError(f"estado debe ser uno de: {', '.join(permitidos)}")
+        return v
+
+
+class PQRRespuestaUpdate(BaseModel):
+    respuesta: str = Field(min_length=3)
+    estado: str = "respondida"
+
+    @field_validator("estado")
+    @classmethod
+    def validar_estado(cls, v: str) -> str:
+        permitidos = {"respondida", "cerrada"}
+        if v not in permitidos:
+            raise ValueError(f"Al responder, estado debe ser uno de: {', '.join(permitidos)}")
+        return v
+
+
+class PQROut(BaseModel):
+    id: int
+    usuario_id: int
+    tipo: str
+    asunto: str
+    descripcion: str
+    estado: str
+    respuesta: Optional[str] = None
+    respondido_por: Optional[int] = None
+    creado_en: Optional[datetime] = None
+    actualizado_en: Optional[datetime] = None
+    usuario_nombre: Optional[str] = None
+    usuario_correo: Optional[str] = None
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+def pqr_a_out(p) -> PQROut:
+    nombre = None
+    correo = None
+    if p.usuario:
+        cliente = p.usuario.cliente
+        nombre = f"{cliente.nombre} {cliente.apellido}" if cliente else p.usuario.nombre
+        correo = p.usuario.correo
+
+    return PQROut(
+        id=p.id,
+        usuario_id=p.usuario_id,
+        tipo=p.tipo,
+        asunto=p.asunto,
+        descripcion=p.descripcion,
+        estado=p.estado,
+        respuesta=p.respuesta,
+        respondido_por=p.respondido_por,
+        creado_en=p.creado_en,
+        actualizado_en=p.actualizado_en,
+        usuario_nombre=nombre,
+        usuario_correo=correo,
+    )
+
+# ---------------------------------------------------------------------------
+# CHATBOT / IA 
+# ---------------------------------------------------------------------------
+class ChatMensajeCreate(BaseModel):
+    mensaje: str = Field(min_length=1, max_length=2000)
+    conversacion_id: Optional[int] = None

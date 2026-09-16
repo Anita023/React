@@ -5,17 +5,21 @@ import AdminPedidos from "./admin/AdminPedidos";
 import AdminProductos from "./admin/AdminProductos";
 import AdminServicios from "./admin/AdminServicios";
 import AdminUsuarios from "./admin/AdminUsuarios";
+import DashboardAdmin from "./admin/DashboardAdmin";
+import AdminPQR from "./admin/AdminPQR";
 
 const SECCIONES = [
+  { id: "dashboard", etiqueta: "Dashboard", icono: "📊" },
   { id: "pedidos", etiqueta: "Pedidos", icono: "🧾" },
   { id: "productos", etiqueta: "Productos", icono: "🍦" },
   { id: "servicios", etiqueta: "Servicios", icono: "🎉" },
   { id: "usuarios", etiqueta: "Usuarios", icono: "👤" },
+  { id: "pqr", etiqueta: "PQR", icono: "📨" },
 ];
 
 export default function EmpleadoPanel() {
   const { usuario, cerrarSesion } = useAuth();
-  const [seccionActiva, setSeccionActiva] = useState("pedidos");
+  const [seccionActiva, setSeccionActiva] = useState("dashboard");
 
   return (
     <DashboardLayout
@@ -28,10 +32,12 @@ export default function EmpleadoPanel() {
       tituloPagina={SECCIONES.find((s) => s.id === seccionActiva)?.etiqueta}
       onCerrarSesion={cerrarSesion}
     >
+      {seccionActiva === "dashboard" && <DashboardAdmin rol="empleado" />}
       {seccionActiva === "pedidos" && <AdminPedidos />}
       {seccionActiva === "productos" && <AdminProductos esAdmin={false} />}
       {seccionActiva === "servicios" && <AdminServicios esAdmin={false} />}
       {seccionActiva === "usuarios" && <AdminUsuarios esAdmin={false} />}
+      {seccionActiva === "pqr" && <AdminPQR />}
     </DashboardLayout>
   );
 }

@@ -15,18 +15,18 @@ import AdminPanel from "./pages/admin/AdminPanel";
 import EmpleadoPanel from "./pages/EmpleadoPanel";
 import ClientePanel from "./pages/ClientePanel";
 
-// Importación del botón de WhatsApp
+// Widgets flotantes (chat de IA y WhatsApp)
+import ChatWidget from "./components/ChatWidget";
 import WhatsAppButton from "./components/WhatsAppButton";
+
+// Rutas donde NO deben verse los widgets flotantes (paneles internos,
+// no son parte de la vitrina pública de la tienda).
+const RUTAS_SIN_WIDGETS = ["/admin", "/empleado", "/mi-cuenta"];
 
 function App() {
   const { pathname } = useLocation();
 
-  // El botón de WhatsApp no debe verse dentro de los paneles
-  // de administrador, empleado ni cliente.
-  const RUTAS_SIN_WHATSAPP = ["/admin", "/empleado", "/mi-cuenta"];
-  const ocultarWhatsApp = RUTAS_SIN_WHATSAPP.some((ruta) =>
-    pathname.startsWith(ruta)
-  );
+  const ocultarWidgets = RUTAS_SIN_WIDGETS.some((ruta) => pathname.startsWith(ruta));
 
   return (
     <>
@@ -97,8 +97,13 @@ function App() {
         />
       </Routes>
 
-      {/* Botón flotante: en toda la app, excepto dentro de los paneles */}
-      {!ocultarWhatsApp && <WhatsAppButton numero="573001234567" />}
+      {/* Widgets flotantes: en toda la tienda pública, excepto dentro de los paneles */}
+      {!ocultarWidgets && (
+        <>
+          <ChatWidget />
+          <WhatsAppButton numero="573001234567" />
+        </>
+      )}
     </>
   );
 }

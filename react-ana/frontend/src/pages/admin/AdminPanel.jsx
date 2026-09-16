@@ -2,17 +2,21 @@ import { useState } from "react";
 import { useAuth } from "../../context/AuthContext";
 import DashboardLayout from "../../components/admin/DashboardLayout";
 import AdminResumen from "./AdminResumen";
+import DashboardAdmin from "./DashboardAdmin";
 import AdminPedidos from "./AdminPedidos";
 import AdminProductos from "./AdminProductos";
 import AdminServicios from "./AdminServicios";
 import AdminUsuarios from "./AdminUsuarios";
+import AdminPQR from "./AdminPQR";
 
 const SECCIONES = [
   { id: "resumen", etiqueta: "Resumen", icono: "🏠" },
+  { id: "dashboard", etiqueta: "Dashboard", icono: "📊" },
   { id: "usuarios", etiqueta: "Usuarios", icono: "👤" },
   { id: "productos", etiqueta: "Productos", icono: "🍦" },
   { id: "servicios", etiqueta: "Servicios", icono: "🎉" },
   { id: "pedidos", etiqueta: "Pedidos", icono: "🧾" },
+  { id: "pqr", etiqueta: "PQR", icono: "📨" },
 ];
 
 export default function AdminPanel() {
@@ -37,6 +41,7 @@ export default function AdminPanel() {
       onCerrarSesion={cerrarSesion}
     >
       {seccionActiva === "resumen" && <AdminResumen onAccionRapida={irACrear} />}
+      {seccionActiva === "dashboard" && <DashboardAdmin rol={usuario?.rol} />}
       {seccionActiva === "usuarios" && (
         <AdminUsuarios
           abrirCrearInicial={crearAlEntrar === "usuarios"}
@@ -61,6 +66,7 @@ export default function AdminPanel() {
           onConsumirCrearInicial={() => setCrearAlEntrar(null)}
         />
       )}
+      {seccionActiva === "pqr" && <AdminPQR />}
     </DashboardLayout>
   );
 }
