@@ -1,12 +1,13 @@
 from typing import Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session, joinedload
 
 from ..database import get_db
 from ..dependencies import get_current_user, require_roles
 from ..models import PQR, Usuario
 from ..schemas import PQRCreate, PQREstadoUpdate, PQRRespuestaUpdate, pqr_a_out
+from ..utils_correo import enviar_respuesta_pqr
 
 router = APIRouter(prefix="/api/pqr", tags=["PQR"])
 
@@ -117,11 +118,12 @@ def cambiar_estado_pqr(
 def responder_pqr(
     id_pqr: int,
     datos: PQRRespuestaUpdate,
+    background_tasks: BackgroundTasks,
     db: Session = Depends(get_db),
     usuario_actual: Usuario = Depends(require_roles("administrador", "empleado")),
 ):
-    """Registra la respuesta de un empleado/administrador y cambia el estado
-    a 'respondida' (o 'cerrada' si así se indica)."""
+    """Registra la respuesta de un empleado/administrador, cambia el estado
+    a 'respondida' (o 'cerrada') y avisa al cliente por correo."""
     pqr = db.query(PQR).filter(PQR.id == id_pqr).first()
     if not pqr:
         raise HTTPException(status_code=404, detail="PQR no encontrada")
@@ -134,4 +136,20 @@ def responder_pqr(
     db.refresh(pqr)
 
     completa = _cargar_pqr_con_usuario(db, pqr.id)
+
+    # El correo se envía en segundo plano, después de responderle al panel:
+    # SMTP es lento y no queremos que el empleado espere ni que un fallo
+    # de correo afecte la respuesta ya guardada.
+    dueno = completa.usuario
+    if dueno and dueno.correo:
+        nombre = (dueno.cliente.nombre if dueno.cliente else None) or dueno.nombre or "cliente"
+        background_tasks.add_task(
+            enviar_respuesta_pqr,
+            dueno.correo,
+            nombre,
+            completa.asunto,
+            completa.respuesta,
+            completa.estado,
+        )
+
     return pqr_a_out(completa)

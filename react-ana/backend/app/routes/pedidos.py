@@ -1,6 +1,6 @@
 from typing import List
 
-from fastapi import APIRouter, Body, Depends, HTTPException, status
+from fastapi import APIRouter, BackgroundTasks, Body, Depends, HTTPException, status
 from pydantic import BaseModel
 from sqlalchemy.orm import Session, joinedload
 
@@ -8,6 +8,7 @@ from ..database import get_db
 from ..dependencies import get_current_user, require_roles
 from ..models import Carrito, CarritoItem, Pedido, PedidoItem, PedidoServicio, Producto, Usuario
 from ..schemas import PedidoCrear, PedidoEstadoUpdate
+from ..utils_correo import enviar_factura_pedido
 
 router = APIRouter(prefix="/api/pedidos", tags=["Pedidos"])
 
@@ -55,8 +56,30 @@ def _pedido_a_dict(pedido: Pedido, incluir_cliente: bool = False, incluir_detall
     return datos
 
 
+def _datos_para_factura(pedido: Pedido, usuario: Usuario, detalles: list) -> dict:
+    """Copia a datos simples (sin objetos SQLAlchemy) lo que necesita el
+    correo/PDF. Se llama dentro del endpoint, mientras la sesión sigue abierta."""
+    cliente = usuario.cliente
+    return {
+        "id": pedido.id,
+        "fecha": pedido.creado_en,
+        "estado": pedido.estado,
+        "metodo_pago": pedido.metodo_pago,
+        "total": float(pedido.total),
+        "cliente_nombre": f"{cliente.nombre} {cliente.apellido}" if cliente else (usuario.nombre or "Cliente"),
+        "cliente_documento": cliente.numero_documento if cliente else "N/A",
+        "cliente_direccion": cliente.direccion if cliente else "N/A",
+        "cliente_telefono": cliente.telefono if cliente else "N/A",
+        "detalles": [
+            {"nombre": d["nombre"], "precio": float(d["precio"]), "cantidad": d["cantidad"]}
+            for d in detalles
+        ],
+    }
+
+
 @router.post("", status_code=status.HTTP_201_CREATED)
 def crear_pedido_desde_carrito(
+    background_tasks: BackgroundTasks,
     datos: PedidoCrear = Body(default=PedidoCrear()),
     db: Session = Depends(get_db),
     usuario_actual: Usuario = Depends(get_current_user),
@@ -111,7 +134,16 @@ def crear_pedido_desde_carrito(
 
     db.commit()
     db.refresh(nuevo_pedido)
-    return {"pedido": _pedido_a_dict(nuevo_pedido, incluir_detalles=True)}
+
+    respuesta = _pedido_a_dict(nuevo_pedido, incluir_detalles=True)
+
+    # Factura por correo en segundo plano: el cliente ve su pedido confirmado
+    # al instante, y si el correo falla el pedido no se ve afectado.
+    if usuario_actual.correo:
+        datos_factura = _datos_para_factura(nuevo_pedido, usuario_actual, respuesta["detalles"])
+        background_tasks.add_task(enviar_factura_pedido, usuario_actual.correo, datos_factura)
+
+    return {"pedido": respuesta}
 
 
 @router.post("/manual", status_code=status.HTTP_201_CREATED)

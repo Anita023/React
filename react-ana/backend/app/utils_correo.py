@@ -1,7 +1,16 @@
 import os
 import smtplib
+from email.mime.application import MIMEApplication
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
+from html import escape
+
+from .utils_factura_pdf import (
+    ETIQUETAS_ESTADO_PEDIDO,
+    ETIQUETAS_METODO_PAGO,
+    construir_pdf_factura,
+    formatear_moneda,
+)
 
 SMTP_HOST = os.getenv("BREVO_SMTP_HOST", "smtp-relay.brevo.com")
 SMTP_PORT = int(os.getenv("BREVO_SMTP_PORT", "587"))
@@ -10,10 +19,17 @@ SMTP_KEY = os.getenv("BREVO_SMTP_KEY")
 EMAIL_FROM = os.getenv("EMAIL_FROM", "no-reply@sweetice.com")
 
 
-def _enviar(correo_destino: str, asunto: str, texto_plano: str, html: str, etiqueta_dev: str) -> None:
+def _enviar(
+    correo_destino: str,
+    asunto: str,
+    texto_plano: str,
+    html: str,
+    etiqueta_dev: str,
+    adjuntos=None,  # lista opcional de (nombre_archivo, bytes_pdf)
+) -> None:
     """
     Función interna compartida por todos los correos: arma el mensaje
-    multipart (texto plano + HTML) y lo envía por Brevo SMTP.
+    (texto plano + HTML, y adjuntos PDF si los hay) y lo envía por Brevo SMTP.
 
     Si BREVO_SMTP_USER / BREVO_SMTP_KEY no están configurados (por ejemplo
     en desarrollo local), no falla la petición: solo imprime en consola
@@ -23,13 +39,24 @@ def _enviar(correo_destino: str, asunto: str, texto_plano: str, html: str, etiqu
         print(f"[DEV] {etiqueta_dev} para {correo_destino} (correo no enviado, faltan credenciales SMTP)")
         return
 
-    mensaje = MIMEMultipart("alternative")
+    cuerpo = MIMEMultipart("alternative")
+    cuerpo.attach(MIMEText(texto_plano, "plain", "utf-8"))
+    cuerpo.attach(MIMEText(html, "html", "utf-8"))
+
+    if adjuntos:
+        # Con adjuntos, el mensaje externo es "mixed": [cuerpo, pdf1, pdf2...]
+        mensaje = MIMEMultipart("mixed")
+        mensaje.attach(cuerpo)
+        for nombre_archivo, contenido in adjuntos:
+            parte = MIMEApplication(contenido, _subtype="pdf")
+            parte.add_header("Content-Disposition", "attachment", filename=nombre_archivo)
+            mensaje.attach(parte)
+    else:
+        mensaje = cuerpo
+
     mensaje["Subject"] = asunto
     mensaje["From"] = f"Sweet Ice <{EMAIL_FROM}>"
     mensaje["To"] = correo_destino
-
-    mensaje.attach(MIMEText(texto_plano, "plain", "utf-8"))
-    mensaje.attach(MIMEText(html, "html", "utf-8"))
 
     try:
         with smtplib.SMTP(SMTP_HOST, SMTP_PORT) as servidor:
@@ -38,7 +65,7 @@ def _enviar(correo_destino: str, asunto: str, texto_plano: str, html: str, etiqu
             servidor.sendmail(EMAIL_FROM, [correo_destino], mensaje.as_string())
     except Exception as error:
         # Un fallo de correo nunca debe tumbar el flujo principal (registro,
-        # respuesta de PQR, etc.); lo dejamos registrado para depurar.
+        # pedido, respuesta de PQR, etc.); lo dejamos registrado para depurar.
         print(f"[ERROR envío de correo] {etiqueta_dev} a {correo_destino}: {error}")
 
 
@@ -189,7 +216,15 @@ def enviar_bienvenida(correo_destino: str, nombre: str) -> None:
 # ---------------------------------------------------------------------------
 def enviar_respuesta_pqr(correo_destino: str, nombre: str, asunto_pqr: str, respuesta: str, estado: str) -> None:
     etiqueta_estado = "Respondida" if estado == "respondida" else "Cerrada"
+    # Sin saltos de línea: el asunto también va en el encabezado del correo.
+    asunto_pqr = " ".join(asunto_pqr.split())
     asunto = f"Respuesta a tu solicitud: {asunto_pqr} - Sweet Ice"
+
+    # Lo que escribe el cliente (asunto) o el empleado (respuesta) se escapa
+    # antes de meterlo en el HTML, y los saltos de línea se conservan.
+    nombre_html = escape(nombre)
+    asunto_pqr_html = escape(asunto_pqr)
+    respuesta_html = escape(respuesta).replace("\n", "<br>")
 
     texto_plano = (
         f"Hola {nombre},\n\n"
@@ -201,10 +236,10 @@ def enviar_respuesta_pqr(correo_destino: str, nombre: str, asunto_pqr: str, resp
 
     contenido = f"""\
         <p style="margin:0 0 4px 0; color:#5A3E2B; font-size:20px; font-weight:bold;">
-          Hola {nombre},
+          Hola {nombre_html},
         </p>
         <p style="margin:0 0 20px 0; color:#8A6A55; font-size:15px; line-height:1.6;">
-          Tu solicitud <strong>"{asunto_pqr}"</strong> ha sido marcada como
+          Tu solicitud <strong>"{asunto_pqr_html}"</strong> ha sido marcada como
           <strong>{etiqueta_estado.lower()}</strong>.
         </p>
 
@@ -213,7 +248,7 @@ def enviar_respuesta_pqr(correo_destino: str, nombre: str, asunto_pqr: str, resp
             Respuesta de Sweet Ice
           </p>
           <p style="margin:0; color:#5A3E2B; font-size:14px; line-height:1.6;">
-            {respuesta}
+            {respuesta_html}
           </p>
         </div>
 
@@ -229,3 +264,110 @@ def enviar_respuesta_pqr(correo_destino: str, nombre: str, asunto_pqr: str, resp
     """
 
     _enviar(correo_destino, asunto, texto_plano, _envoltura_html(contenido), f"Respuesta PQR ({estado})")
+
+
+# ---------------------------------------------------------------------------
+# FACTURA DE UN PEDIDO (con PDF adjunto)
+# ---------------------------------------------------------------------------
+def enviar_factura_pedido(correo_destino: str, datos: dict) -> None:
+    """`datos` es un dict con valores simples (armado en routes/pedidos.py),
+    no objetos de SQLAlchemy, porque esto corre en segundo plano cuando la
+    sesión de base de datos ya se cerró."""
+    numero = datos["id"]
+    nombre = datos["cliente_nombre"]
+    fecha = datos["fecha"]
+    fecha_txt = fecha.strftime("%d/%m/%Y %H:%M") if fecha else "N/A"
+    metodo = ETIQUETAS_METODO_PAGO.get(datos["metodo_pago"], datos["metodo_pago"])
+    estado = ETIQUETAS_ESTADO_PEDIDO.get(datos["estado"], datos["estado"])
+    detalles = datos["detalles"]
+
+    asunto = f"Tu factura del pedido #{numero} - Sweet Ice"
+
+    # El PDF se genera aquí; si algo falla, el correo sale igual sin adjunto.
+    adjuntos = []
+    try:
+        pdf = construir_pdf_factura(
+            titulo=f"Factura - Pedido #{numero}",
+            fecha=fecha,
+            cliente_nombre=nombre,
+            cliente_documento=datos["cliente_documento"],
+            cliente_direccion=datos["cliente_direccion"],
+            cliente_telefono=datos["cliente_telefono"],
+            detalles=[(d["nombre"], d["cantidad"], d["precio"], d["precio"] * d["cantidad"]) for d in detalles],
+            total=datos["total"],
+            estado=estado,
+            metodo_pago=metodo,
+        )
+        adjuntos.append((f"Factura-Pedido-{numero}.pdf", pdf))
+        nota_adjunto = "Adjuntamos tu factura en PDF."
+    except Exception as error:
+        print(f"[ERROR generando PDF de factura] pedido {numero}: {error}")
+        nota_adjunto = "Puedes ver tu factura en tu panel de cliente."
+
+    lineas_texto = "\n".join(
+        f"- {d['nombre']} x{d['cantidad']}: {formatear_moneda(d['precio'] * d['cantidad'])}"
+        for d in detalles
+    )
+    texto_plano = (
+        f"Hola {nombre},\n\n"
+        f"¡Gracias por tu pedido en Sweet Ice! Aquí está el resumen del pedido #{numero} "
+        f"({fecha_txt}):\n\n"
+        f"{lineas_texto}\n\n"
+        f"Total: {formatear_moneda(datos['total'])}\n"
+        f"Método de pago: {metodo}\n"
+        f"Estado: {estado}\n\n"
+        f"{nota_adjunto}\n\n"
+        f"— Sweet Ice"
+    )
+
+    filas = "".join(
+        f"""\
+          <tr>
+            <td style="padding:8px 0; color:#5A3E2B; font-size:14px; border-bottom:1px solid #F0E2D0;">{escape(d['nombre'])}</td>
+            <td style="padding:8px 0; color:#5A3E2B; font-size:14px; border-bottom:1px solid #F0E2D0; text-align:center;">{d['cantidad']}</td>
+            <td style="padding:8px 0; color:#5A3E2B; font-size:14px; border-bottom:1px solid #F0E2D0; text-align:right;">{formatear_moneda(d['precio'] * d['cantidad'])}</td>
+          </tr>"""
+        for d in detalles
+    )
+
+    contenido = f"""\
+        <p style="margin:0 0 4px 0; color:#5A3E2B; font-size:20px; font-weight:bold;">
+          ¡Gracias por tu pedido, {escape(nombre)}!
+        </p>
+        <p style="margin:0 0 20px 0; color:#8A6A55; font-size:15px; line-height:1.6;">
+          Recibimos tu <strong>pedido #{numero}</strong> el {fecha_txt}. {nota_adjunto}
+        </p>
+
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 16px 0;">
+          <tr>
+            <td style="padding:0 0 6px 0; color:#B0A296; font-size:12px; font-weight:bold;">PRODUCTO / SERVICIO</td>
+            <td style="padding:0 0 6px 0; color:#B0A296; font-size:12px; font-weight:bold; text-align:center;">CANT.</td>
+            <td style="padding:0 0 6px 0; color:#B0A296; font-size:12px; font-weight:bold; text-align:right;">SUBTOTAL</td>
+          </tr>
+{filas}
+        </table>
+
+        <div style="background-color:#FCE8DD; border-radius:16px; padding:16px 20px; margin:0 0 20px 0; text-align:right;">
+          <span style="color:#8A6A55; font-size:13px;">Total</span><br />
+          <span style="color:#B5461F; font-size:26px; font-weight:bold;">{formatear_moneda(datos['total'])}</span>
+        </div>
+
+        <p style="margin:0; color:#8A6A55; font-size:13px; line-height:1.6; text-align:center;">
+          Método de pago: <strong>{metodo}</strong> &nbsp;·&nbsp; Estado: <strong>{estado}</strong>
+        </p>
+
+        <hr style="border:none; border-top:1px solid #F0E2D0; margin:28px 0;" />
+
+        <p style="margin:0; color:#B0A296; font-size:12px; line-height:1.5; text-align:center;">
+          ¡Gracias por elegir Sweet Ice! 🍦
+        </p>
+    """
+
+    _enviar(
+        correo_destino,
+        asunto,
+        texto_plano,
+        _envoltura_html(contenido),
+        f"Factura del pedido #{numero}",
+        adjuntos=adjuntos,
+    )

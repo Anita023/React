@@ -1,15 +1,8 @@
-import io
-from datetime import date, datetime
-from decimal import Decimal
+from datetime import date
 from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
-from fastapi.responses import StreamingResponse
-from reportlab.lib import colors
-from reportlab.lib.pagesizes import letter
-from reportlab.lib.styles import getSampleStyleSheet
-from reportlab.lib.units import cm
-from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer, Table, TableStyle
+from fastapi.responses import Response
 from sqlalchemy import func
 from sqlalchemy.orm import Session, joinedload
 
@@ -17,6 +10,7 @@ from ..database import get_db
 from ..dependencies import require_roles
 from ..models import DetalleFactura, Factura, Usuario, Venta
 from ..schemas import FacturaOut, factura_a_out
+from ..utils_factura_pdf import construir_pdf_factura
 
 router = APIRouter(prefix="/api/facturas", tags=["Facturas"])
 
@@ -137,80 +131,23 @@ def descargar_factura_pdf(
         raise HTTPException(status_code=404, detail="Factura no encontrada")
 
     cliente = factura.venta.cliente if factura.venta else None
-    cliente_nombre = f"{cliente.nombre} {cliente.apellido}" if cliente else "N/A"
-    cliente_documento = cliente.numero_documento if cliente else "N/A"
-    cliente_direccion = cliente.direccion if cliente else "N/A"
-    cliente_telefono = cliente.telefono if cliente else "N/A"
 
-    buffer = io.BytesIO()
-    doc = SimpleDocTemplate(
-        buffer,
-        pagesize=letter,
-        title=f"Factura {factura.numero_factura}",
-        topMargin=2 * cm,
-        bottomMargin=2 * cm,
-    )
-    estilos = getSampleStyleSheet()
-    elementos = []
-
-    elementos.append(Paragraph("Sweet Ice", estilos["Title"]))
-    elementos.append(Paragraph(f"Factura de Venta N° {factura.numero_factura}", estilos["Heading2"]))
-    elementos.append(
-        Paragraph(
-            f"Fecha de emisión: {factura.creado_en.strftime('%d/%m/%Y %H:%M') if factura.creado_en else 'N/A'}",
-            estilos["Normal"],
-        )
-    )
-    elementos.append(Spacer(1, 14))
-
-    elementos.append(Paragraph("<b>Datos del cliente</b>", estilos["Heading4"]))
-    elementos.append(Paragraph(f"Nombre: {cliente_nombre}", estilos["Normal"]))
-    elementos.append(Paragraph(f"Documento: {cliente_documento}", estilos["Normal"]))
-    elementos.append(Paragraph(f"Dirección: {cliente_direccion}", estilos["Normal"]))
-    elementos.append(Paragraph(f"Teléfono: {cliente_telefono}", estilos["Normal"]))
-    elementos.append(Spacer(1, 16))
-
-    datos_tabla = [["Producto/Servicio", "Cantidad", "Precio unitario", "Subtotal"]]
-    for d in factura.detalles:
-        datos_tabla.append(
-            [d.nombre_item, str(d.cantidad), f"${d.precio_unitario:,.0f}", f"${d.subtotal:,.0f}"]
-        )
-
-    tabla = Table(datos_tabla, colWidths=[220, 70, 100, 100], repeatRows=1)
-    tabla.setStyle(
-        TableStyle(
-            [
-                ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#db2777")),
-                ("TEXTCOLOR", (0, 0), (-1, 0), colors.white),
-                ("FONTSIZE", (0, 0), (-1, -1), 9),
-                ("GRID", (0, 0), (-1, -1), 0.5, colors.grey),
-                ("ALIGN", (1, 0), (-1, -1), "CENTER"),
-                ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
-                ("ROWBACKGROUNDS", (0, 1), (-1, -1), [colors.white, colors.HexColor("#fff1f2")]),
-            ]
-        )
-    )
-    elementos.append(tabla)
-    elementos.append(Spacer(1, 18))
-
-    elementos.append(Paragraph(f"Subtotal: ${factura.subtotal:,.0f}", estilos["Normal"]))
-    elementos.append(Paragraph(f"Impuestos: ${factura.impuestos:,.0f}", estilos["Normal"]))
-    elementos.append(Paragraph(f"<b>Total: ${factura.total:,.0f}</b>", estilos["Heading3"]))
-    elementos.append(Paragraph(f"Estado: {factura.estado}", estilos["Normal"]))
-    elementos.append(Spacer(1, 24))
-    elementos.append(
-        Paragraph(
-            f"Documento generado el {datetime.now().strftime('%d/%m/%Y %H:%M')}",
-            estilos["Italic"],
-        )
+    pdf = construir_pdf_factura(
+        titulo=f"Factura de Venta N° {factura.numero_factura}",
+        fecha=factura.creado_en,
+        cliente_nombre=f"{cliente.nombre} {cliente.apellido}" if cliente else "N/A",
+        cliente_documento=cliente.numero_documento if cliente else "N/A",
+        cliente_direccion=cliente.direccion if cliente else "N/A",
+        cliente_telefono=cliente.telefono if cliente else "N/A",
+        detalles=[(d.nombre_item, d.cantidad, d.precio_unitario, d.subtotal) for d in factura.detalles],
+        subtotal=factura.subtotal,
+        impuestos=factura.impuestos,
+        total=factura.total,
+        estado=factura.estado,
     )
 
-    doc.build(elementos)
-    buffer.seek(0)
-
-    nombre_archivo = f"{factura.numero_factura}.pdf"
-    return StreamingResponse(
-        buffer,
+    return Response(
+        content=pdf,
         media_type="application/pdf",
-        headers={"Content-Disposition": f'attachment; filename="{nombre_archivo}"'},
+        headers={"Content-Disposition": f'attachment; filename="{factura.numero_factura}.pdf"'},
     )
