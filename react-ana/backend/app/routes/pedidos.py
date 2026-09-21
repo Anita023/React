@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session, joinedload
 
 from ..database import get_db
 from ..dependencies import get_current_user, require_roles
-from ..models import Carrito, CarritoItem, Pedido, PedidoItem, Producto, Usuario
+from ..models import Carrito, CarritoItem, Pedido, PedidoItem, PedidoServicio, Producto, Usuario
 from ..schemas import PedidoCrear, PedidoEstadoUpdate
 
 router = APIRouter(prefix="/api/pedidos", tags=["Pedidos"])
@@ -36,10 +36,22 @@ def _pedido_a_dict(pedido: Pedido, incluir_cliente: bool = False, incluir_detall
         datos["apellido"] = cliente.apellido if cliente else None
         datos["correo"] = pedido.usuario.correo
     if incluir_detalles:
-        datos["detalles"] = [
+        # Los productos y servicios del pedido viven en tablas distintas
+        # (PedidoItem / PedidoServicio), pero al frontend le devolvemos una
+        # sola lista de "detalles" unificada.
+        detalles_productos = [
             {"nombre": d.nombre_producto, "precio": d.precio_unitario, "cantidad": d.cantidad}
             for d in pedido.items
         ]
+        detalles_servicios = [
+            {
+                "nombre": s.servicio.nombre if s.servicio else "Servicio",
+                "precio": s.precio_unitario,
+                "cantidad": 1,
+            }
+            for s in pedido.servicios
+        ]
+        datos["detalles"] = detalles_productos + detalles_servicios
     return datos
 
 
@@ -54,7 +66,14 @@ def crear_pedido_desde_carrito(
     if not items_carrito:
         raise HTTPException(status_code=400, detail="Tu carrito está vacío")
 
-    total = sum(float(item.producto.precio) * item.cantidad for item in items_carrito)
+    # Cada item del carrito es un producto O un servicio (nunca ambos), así
+    # que el precio hay que tomarlo del que corresponda en cada caso.
+    def _precio_item(item: CarritoItem) -> float:
+        if item.servicio_id:
+            return float(item.servicio.precio)
+        return float(item.producto.precio)
+
+    total = sum(_precio_item(item) * item.cantidad for item in items_carrito)
 
     nuevo_pedido = Pedido(
         usuario_id=usuario_actual.id,
@@ -66,15 +85,28 @@ def crear_pedido_desde_carrito(
     db.flush()  # para obtener nuevo_pedido.id antes del commit
 
     for item in items_carrito:
-        db.add(
-            PedidoItem(
-                pedido_id=nuevo_pedido.id,
-                producto_id=item.producto_id,
-                nombre_producto=item.producto.nombre,
-                precio_unitario=item.producto.precio,
-                cantidad=item.cantidad,
+        if item.servicio_id:
+            # Un servicio no tiene "cantidad" en el pedido (PedidoServicio no
+            # tiene esa columna); si el carrito traía cantidad > 1, sumamos
+            # ese costo repitiendo el precio unitario * cantidad en el total
+            # ya calculado arriba, y dejamos un registro por servicio.
+            db.add(
+                PedidoServicio(
+                    pedido_id=nuevo_pedido.id,
+                    servicio_id=item.servicio_id,
+                    precio_unitario=float(item.servicio.precio) * item.cantidad,
+                )
             )
-        )
+        else:
+            db.add(
+                PedidoItem(
+                    pedido_id=nuevo_pedido.id,
+                    producto_id=item.producto_id,
+                    nombre_producto=item.producto.nombre,
+                    precio_unitario=item.producto.precio,
+                    cantidad=item.cantidad,
+                )
+            )
         db.delete(item)
 
     db.commit()
