@@ -10,10 +10,10 @@ const OPCIONES_TIPO = [
 ];
 
 const ESTILOS_ESTADO = {
-  pendiente: "bg-[--color-cream] text-[--color-caramel-deep]",
-  en_proceso: "bg-[--color-skyblue-soft] text-[--color-skyblue-deep]",
-  respondida: "bg-[--color-pistachio-soft] text-[--color-pistachio-deep]",
-  cerrada: "bg-[--color-border-soft] text-[--color-choco-soft]",
+  pendiente: "bg-cream text-caramel-deep",
+  en_proceso: "bg-skyblue-soft text-skyblue-deep",
+  respondida: "bg-pistachio-soft text-pistachio-deep",
+  cerrada: "bg-border-soft text-choco-soft",
 };
 
 const ETIQUETAS_ESTADO = {
@@ -76,34 +76,38 @@ export default function MisPQR() {
   return (
     <div>
       <div className="mb-6 flex items-center justify-between">
-        <p className="text-sm text-[--color-choco-soft]">
+        <p className="text-sm text-choco-soft">
           Registra peticiones, quejas, reclamos o sugerencias, y consulta su estado aquí.
         </p>
         <button
           onClick={() => setMostrarFormulario((prev) => !prev)}
-          className="whitespace-nowrap rounded-full bg-[--color-caramel] px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-[--color-caramel-deep]"
+          className={
+            mostrarFormulario
+              ? "whitespace-nowrap rounded-full border border-border-soft bg-white px-5 py-2.5 text-sm font-bold text-choco shadow-sm transition-all hover:bg-cream-soft"
+              : "whitespace-nowrap rounded-full bg-strawberry-deep hover:bg-strawberry px-5 py-2.5 text-sm font-bold text-white shadow-soft transition-all hover:-translate-y-0.5 hover:shadow-lift"
+          }
         >
           {mostrarFormulario ? "Cancelar" : "+ Nueva solicitud"}
         </button>
       </div>
 
-      {mensaje && <p className="mb-4 text-sm font-semibold text-[#047857]">{mensaje}</p>}
-      {error && <p className="mb-4 text-sm text-[--color-strawberry-deep]">{error}</p>}
+      {mensaje && <p className="mb-4 text-sm font-semibold text-pistachio-deep">{mensaje}</p>}
+      {error && <p className="mb-4 text-sm text-strawberry-deep">{error}</p>}
 
       {mostrarFormulario && (
         <form
           onSubmit={manejarEnvio}
-          className="mb-6 grid gap-3 rounded-xl border border-[--color-border-soft] bg-white p-5 shadow-[--shadow-soft] sm:grid-cols-2"
+          className="mb-6 grid gap-3 rounded-2xl border border-border-soft bg-white p-6 shadow-lift sm:grid-cols-2"
         >
           <div>
-            <label className="mb-1 block text-xs font-medium text-[--color-choco-soft]">
+            <label className="mb-1 block text-xs font-medium text-choco-soft">
               Tipo
             </label>
             <select
               name="tipo"
               value={formulario.tipo}
               onChange={manejarCambio}
-              className="w-full rounded-lg border border-[--color-border-soft] px-3 py-2 text-sm"
+              className="w-full rounded-lg border border-border-soft px-3 py-2 text-sm"
             >
               {OPCIONES_TIPO.map((op) => (
                 <option key={op.value} value={op.value}>
@@ -114,7 +118,7 @@ export default function MisPQR() {
           </div>
 
           <div>
-            <label className="mb-1 block text-xs font-medium text-[--color-choco-soft]">
+            <label className="mb-1 block text-xs font-medium text-choco-soft">
               Asunto
             </label>
             <input
@@ -124,12 +128,12 @@ export default function MisPQR() {
               placeholder="Resumen breve"
               required
               minLength={3}
-              className="w-full rounded-lg border border-[--color-border-soft] px-3 py-2 text-sm"
+              className="w-full rounded-lg border border-border-soft px-3 py-2 text-sm"
             />
           </div>
 
           <div className="sm:col-span-2">
-            <label className="mb-1 block text-xs font-medium text-[--color-choco-soft]">
+            <label className="mb-1 block text-xs font-medium text-choco-soft">
               Descripción
             </label>
             <textarea
@@ -140,7 +144,7 @@ export default function MisPQR() {
               required
               minLength={5}
               rows={4}
-              className="w-full rounded-lg border border-[--color-border-soft] px-3 py-2 text-sm"
+              className="w-full rounded-lg border border-border-soft px-3 py-2 text-sm"
             />
           </div>
 
@@ -148,7 +152,7 @@ export default function MisPQR() {
             <button
               type="submit"
               disabled={enviando}
-              className="rounded-lg bg-gradient-to-r from-[#f43f5e] to-[#db2777] px-4 py-2 text-sm font-semibold text-white shadow-sm disabled:opacity-60"
+              className="rounded-lg bg-strawberry-deep hover:bg-strawberry px-4 py-2 text-sm font-semibold text-white shadow-sm disabled:opacity-60"
             >
               {enviando ? "Enviando..." : "Enviar solicitud"}
             </button>
@@ -157,11 +161,11 @@ export default function MisPQR() {
       )}
 
       <div className="space-y-3">
-        {cargando && <p className="text-sm text-[--color-choco-soft]">Cargando tus solicitudes...</p>}
+        {cargando && <p className="text-sm text-choco-soft">Cargando tus solicitudes...</p>}
 
         {!cargando && lista.length === 0 && (
-          <div className="rounded-xl border border-dashed border-[--color-border-soft] bg-white p-8 text-center">
-            <p className="text-sm text-[--color-choco-soft]">
+          <div className="rounded-xl border border-dashed border-border-soft bg-white p-8 text-center">
+            <p className="text-sm text-choco-soft">
               No has registrado ninguna PQR todavía.
             </p>
           </div>
@@ -170,34 +174,34 @@ export default function MisPQR() {
         {lista.map((item) => (
           <div
             key={item.id}
-            className="rounded-xl border border-[--color-border-soft] bg-white p-5 shadow-[--shadow-soft]"
+            className="rounded-2xl border border-border-soft border-l-4 border-l-strawberry bg-white p-5 shadow-soft transition-all hover:-translate-y-0.5 hover:shadow-lift"
           >
             <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
               <div>
-                <span className="mr-2 rounded-full bg-[--color-cream] px-2.5 py-0.5 text-xs font-semibold capitalize text-[--color-choco-soft]">
+                <span className="mr-2 rounded-full bg-strawberry-soft px-2.5 py-0.5 text-xs font-bold capitalize text-strawberry-deep">
                   {item.tipo}
                 </span>
-                <span className="font-medium text-[--color-choco]">{item.asunto}</span>
+                <span className="font-semibold text-choco">{item.asunto}</span>
               </div>
               <span
-                className={`rounded-full px-2.5 py-1 text-xs font-semibold ${ESTILOS_ESTADO[item.estado] || ""}`}
+                className={`rounded-full px-2.5 py-1 text-xs font-bold ${ESTILOS_ESTADO[item.estado] || ""}`}
               >
                 {ETIQUETAS_ESTADO[item.estado] || item.estado}
               </span>
             </div>
 
-            <p className="text-sm text-[--color-choco-soft]">{item.descripcion}</p>
+            <p className="text-sm text-choco-soft">{item.descripcion}</p>
 
             {item.respuesta && (
-              <div className="mt-3 rounded-lg bg-[--color-cream]/60 p-3">
-                <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-[--color-choco-soft]">
-                  Respuesta de Sweet Ice
+              <div className="mt-3 rounded-xl bg-pistachio-soft/60 p-3">
+                <p className="mb-1 text-xs font-bold uppercase tracking-wide text-pistachio-deep">
+                  💬 Respuesta de Sweet Ice
                 </p>
-                <p className="text-sm text-[--color-choco]">{item.respuesta}</p>
+                <p className="text-sm text-choco">{item.respuesta}</p>
               </div>
             )}
 
-            <p className="mt-3 text-xs text-[--color-choco-soft]">
+            <p className="mt-3 text-xs text-choco-soft">
               {item.creado_en &&
                 new Date(item.creado_en).toLocaleDateString("es-CO", {
                   day: "numeric",

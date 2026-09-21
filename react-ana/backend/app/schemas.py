@@ -101,6 +101,7 @@ class UsuarioOut(BaseModel):
     direccion: Optional[str] = None
     telefono: Optional[str] = None
     fecha_registro: Optional[datetime] = None
+    cliente_id: Optional[int] = None  # id de la tabla clientes (distinto del usuario_id)
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -119,6 +120,7 @@ def usuario_a_out(usuario) -> UsuarioOut:
         direccion=cliente.direccion if cliente else None,
         telefono=cliente.telefono if cliente else None,
         fecha_registro=usuario.fecha_registro,
+        cliente_id=cliente.id if cliente else None,
     )
 
 
@@ -249,8 +251,17 @@ def servicio_a_out(s) -> ServicioOut:
 # CARRITO
 # ---------------------------------------------------------------------------
 class CarritoAgregarRequest(BaseModel):
-    productoId: int
+    productoId: Optional[int] = None
+    servicioId: Optional[int] = None
     cantidad: int = Field(default=1, ge=1)
+
+    @field_validator("servicioId")
+    @classmethod
+    def validar_uno_solo(cls, v, info):
+        producto_id = info.data.get("productoId")
+        if bool(v) == bool(producto_id):
+            raise ValueError("Debes enviar productoId o servicioId (uno solo, no ambos)")
+        return v
 
 
 class CarritoCantidadRequest(BaseModel):
@@ -259,7 +270,9 @@ class CarritoCantidadRequest(BaseModel):
 
 class CarritoItemOut(BaseModel):
     item_id: int
-    id_producto: int
+    id_producto: Optional[int] = None
+    id_servicio: Optional[int] = None
+    tipo: str  # "producto" o "servicio"
     nombre: str
     precio: Decimal
     cantidad: int
@@ -312,7 +325,7 @@ class PedidoOut(BaseModel):
     nombre: Optional[str] = None
     apellido: Optional[str] = None
     correo: Optional[str] = None
-    detalles: Optional[list[DetallePedidoOut]] = None   
+    detalles: Optional[list[DetallePedidoOut]] = None
 
 
 # ---------------------------------------------------------------------------
@@ -454,6 +467,7 @@ def factura_a_out(f) -> FacturaOut:
         detalles=[DetalleFacturaOut.model_validate(d) for d in f.detalles] if f.detalles else None,
     )
 
+
 # ---------------------------------------------------------------------------
 # PQR (Quinto Avance)
 # ---------------------------------------------------------------------------
@@ -536,8 +550,9 @@ def pqr_a_out(p) -> PQROut:
         usuario_correo=correo,
     )
 
+
 # ---------------------------------------------------------------------------
-# CHATBOT / IA 
+# CHATBOT / IA
 # ---------------------------------------------------------------------------
 class ChatMensajeCreate(BaseModel):
     mensaje: str = Field(min_length=1, max_length=2000)

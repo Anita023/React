@@ -7,10 +7,14 @@ import AdminServicios from "./admin/AdminServicios";
 import AdminUsuarios from "./admin/AdminUsuarios";
 import DashboardAdmin from "./admin/DashboardAdmin";
 import AdminPQR from "./admin/AdminPQR";
+import AdminVentas from "./admin/AdminVentas";
+import AdminFacturas from "./admin/AdminFacturas";
 
 const SECCIONES = [
   { id: "dashboard", etiqueta: "Dashboard", icono: "📊" },
   { id: "pedidos", etiqueta: "Pedidos", icono: "🧾" },
+  { id: "ventas", etiqueta: "Ventas", icono: "💵" },
+  { id: "facturas", etiqueta: "Facturas", icono: "📄" },
   { id: "productos", etiqueta: "Productos", icono: "🍦" },
   { id: "servicios", etiqueta: "Servicios", icono: "🎉" },
   { id: "usuarios", etiqueta: "Usuarios", icono: "👤" },
@@ -38,6 +42,8 @@ export default function EmpleadoPanel() {
       {seccionActiva === "servicios" && <AdminServicios esAdmin={false} />}
       {seccionActiva === "usuarios" && <AdminUsuarios esAdmin={false} />}
       {seccionActiva === "pqr" && <AdminPQR />}
+      {seccionActiva === "ventas" && <AdminVentas />}
+      {seccionActiva === "facturas" && <AdminFacturas />}
     </DashboardLayout>
   );
 }

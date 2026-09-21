@@ -15,10 +15,10 @@ const TARJETAS_VACIAS = [
 ];
 
 const ESTILOS_COLOR = {
-  sky: "bg-[#e0f2fe] text-[#0369a1]",
-  rose: "bg-[#ffe4e6] text-[#be123c]",
-  amber: "bg-[#fef3c7] text-[#b45309]",
-  emerald: "bg-[#d1fae5] text-[#047857]",
+  sky: "bg-skyblue-soft text-skyblue-deep",
+  rose: "bg-strawberry-soft text-strawberry-deep",
+  amber: "bg-caramel-soft text-caramel-deep",
+  emerald: "bg-pistachio-soft text-pistachio-deep",
 };
 
 const ACCIONES_RAPIDAS = [
@@ -26,25 +26,25 @@ const ACCIONES_RAPIDAS = [
     id: "pedidos",
     etiqueta: "Agregar pedido",
     icono: "🧾",
-    clases: "border-[#a7f3d0] bg-[#ecfdf5] text-[#065f46] hover:bg-[#d1fae5]",
+    clases: "border-pistachio-soft bg-pistachio-soft text-pistachio-deep hover:bg-pistachio-soft",
   },
   {
     id: "servicios",
     etiqueta: "Agregar servicio",
     icono: "🎉",
-    clases: "border-[#fde68a] bg-[#fffbeb] text-[#92400e] hover:bg-[#fef3c7]",
+    clases: "border-caramel-soft bg-caramel-soft text-caramel-deep hover:bg-caramel-soft",
   },
   {
     id: "productos",
     etiqueta: "Agregar producto",
     icono: "🍦",
-    clases: "border-[#ffe4e6] bg-[#fff1f2] text-[#9f1239] hover:bg-[#ffe4e6]",
+    clases: "border-strawberry-soft bg-strawberry-soft text-strawberry-deep hover:bg-strawberry-soft",
   },
   {
     id: "usuarios",
     etiqueta: "Agregar usuario",
     icono: "👤",
-    clases: "border-[#bae6fd] bg-[#f0f9ff] text-[#075985] hover:bg-[#e0f2fe]",
+    clases: "border-skyblue-soft bg-skyblue-soft text-skyblue-deep hover:bg-skyblue-soft",
   },
 ];
 
@@ -83,7 +83,7 @@ export default function AdminResumen({ onAccionRapida }) {
 
   return (
     <div>
-      <p className="mb-6 text-sm text-[--color-choco-soft]">
+      <p className="mb-6 text-sm text-choco-soft">
         Vista rápida del estado actual de Sweet Ice.
       </p>
 
@@ -91,7 +91,7 @@ export default function AdminResumen({ onAccionRapida }) {
         {tarjetas.map((tarjeta) => (
           <div
             key={tarjeta.etiqueta}
-            className="rounded-xl border border-[--color-border-soft] bg-white p-5 shadow-[--shadow-soft]"
+            className="rounded-xl border border-border-soft bg-white p-5 shadow-soft"
           >
             <div
               className={`mb-3 flex h-10 w-10 items-center justify-center rounded-full text-xl ${
@@ -100,16 +100,16 @@ export default function AdminResumen({ onAccionRapida }) {
             >
               {tarjeta.icono}
             </div>
-            <p className="font-display text-3xl font-semibold text-[--color-choco]">
+            <p className="font-display text-3xl font-semibold text-choco">
               {cargando ? "…" : tarjeta.valor}
             </p>
-            <p className="text-sm text-[--color-choco-soft]">{tarjeta.etiqueta}</p>
+            <p className="text-sm text-choco-soft">{tarjeta.etiqueta}</p>
           </div>
         ))}
       </div>
 
       <div className="mt-8">
-        <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-[--color-choco-soft]">
+        <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-choco-soft">
           Acciones rápidas
         </p>
         <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
@@ -130,8 +130,8 @@ export default function AdminResumen({ onAccionRapida }) {
         <div
           className={`mt-6 rounded-xl border p-4 text-sm ${
             pedidosPendientes > 0
-              ? "border-[#fde68a] bg-[#fffbeb] text-[#92400e]"
-              : "border-[#a7f3d0] bg-[#ecfdf5] text-[#065f46]"
+              ? "border-caramel-soft bg-caramel-soft text-caramel-deep"
+              : "border-pistachio-soft bg-pistachio-soft text-pistachio-deep"
           }`}
         >
           {pedidosPendientes > 0 ? (

@@ -223,8 +223,8 @@ export default function AdminServicios({
     const conError = tocados[nombre] && erroresCampos[nombre];
     return `w-full rounded-lg border px-3 py-2 text-sm focus:outline-none ${
       conError
-        ? "border-[--color-strawberry-deep] focus:border-[--color-strawberry-deep]"
-        : "border-[--color-border-soft] focus:border-[--color-strawberry-deep]"
+        ? "border-strawberry-deep focus:border-strawberry-deep"
+        : "border-border-soft focus:border-strawberry-deep"
     }`;
   }
 
@@ -241,21 +241,21 @@ export default function AdminServicios({
         onAccion={abrirCrear}
       />
 
-      {mensaje && <p className="mb-4 text-sm text-[#047857]">{mensaje}</p>}
-      {error && <p className="mb-4 text-sm text-[--color-strawberry-deep]">{error}</p>}
+      {mensaje && <p className="mb-4 text-sm text-pistachio-deep">{mensaje}</p>}
+      {error && <p className="mb-4 text-sm text-strawberry-deep">{error}</p>}
 
-      <div className="overflow-hidden rounded-xl border border-[--color-border-soft] bg-white shadow-[--shadow-soft]">
+      <div className="overflow-hidden rounded-xl border border-border-soft bg-white shadow-soft">
         {cargando ? (
-          <p className="p-6 text-sm text-[--color-choco-soft]">Cargando servicios...</p>
+          <p className="p-6 text-sm text-choco-soft">Cargando servicios...</p>
         ) : serviciosFiltrados.length === 0 ? (
-          <p className="p-6 text-sm text-[--color-choco-soft]">
+          <p className="p-6 text-sm text-choco-soft">
             No se encontraron servicios con esos filtros.
           </p>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-[#fef3c7] bg-[#fffbeb] text-left text-xs uppercase tracking-wide text-[#92400e]/70">
+                <tr className="border-b border-caramel-soft bg-caramel-soft text-left text-xs uppercase tracking-wide text-caramel-deep/70">
                   <th className="px-4 py-3">Nombre</th>
                   <th className="px-4 py-3">Precio</th>
                   <th className="px-4 py-3">Estado</th>
@@ -266,12 +266,12 @@ export default function AdminServicios({
                 {serviciosFiltrados.map((servicio) => (
                   <tr
                     key={servicio.id}
-                    className="border-b border-[--color-border-soft] last:border-0 hover:bg-[--color-cream]/40"
+                    className="border-b border-border-soft last:border-0 hover:bg-cream/40"
                   >
-                    <td className="px-4 py-3 font-medium text-[--color-choco]">
+                    <td className="px-4 py-3 font-medium text-choco">
                       {servicio.nombre}
                     </td>
-                    <td className="px-4 py-3 text-[--color-choco-soft]">
+                    <td className="px-4 py-3 text-choco-soft">
                       {Number(servicio.precio) > 0
                         ? `$${Number(servicio.precio).toLocaleString("es-CO")}`
                         : "Sin costo"}
@@ -280,13 +280,13 @@ export default function AdminServicios({
                       <span
                         className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold ${
                           servicio.disponible
-                            ? "bg-[#d1fae5] text-[#047857]"
-                            : "bg-[--color-cream] text-[--color-choco-soft]"
+                            ? "bg-pistachio-soft text-pistachio-deep"
+                            : "bg-cream text-choco-soft"
                         }`}
                       >
                         <span
                           className={`h-1.5 w-1.5 rounded-full ${
-                            servicio.disponible ? "bg-[#22c55e]" : "bg-[#9ca3af]"
+                            servicio.disponible ? "bg-pistachio-deep" : "bg-choco-soft"
                           }`}
                         />
                         {servicio.disponible ? "Disponible" : "No disponible"}
@@ -296,7 +296,7 @@ export default function AdminServicios({
                       {esAdmin && (
                         <button
                           onClick={() => iniciarEdicion(servicio)}
-                          className="text-[#0369a1] hover:underline"
+                          className="text-skyblue-deep hover:underline"
                         >
                           Editar
                         </button>
@@ -305,13 +305,13 @@ export default function AdminServicios({
                         <>
                           <button
                             onClick={() => alternarDisponibilidad(servicio)}
-                            className="text-[#b45309] hover:underline"
+                            className="text-caramel-deep hover:underline"
                           >
                             {servicio.disponible ? "Desactivar" : "Activar"}
                           </button>
                           <button
                             onClick={() => manejarEliminar(servicio)}
-                            className="text-[--color-strawberry-deep] hover:underline"
+                            className="text-strawberry-deep hover:underline"
                           >
                             Eliminar
                           </button>
@@ -346,7 +346,7 @@ export default function AdminServicios({
               className={claseInput("nombre")}
             />
             {tocados.nombre && erroresCampos.nombre && (
-              <p className="mt-1 text-xs text-[--color-strawberry-deep]">{erroresCampos.nombre}</p>
+              <p className="mt-1 text-xs text-strawberry-deep">{erroresCampos.nombre}</p>
             )}
           </div>
 
@@ -361,7 +361,7 @@ export default function AdminServicios({
               className={claseInput("precio")}
             />
             {tocados.precio && erroresCampos.precio && (
-              <p className="mt-1 text-xs text-[--color-strawberry-deep]">{erroresCampos.precio}</p>
+              <p className="mt-1 text-xs text-strawberry-deep">{erroresCampos.precio}</p>
             )}
           </div>
 
@@ -375,14 +375,14 @@ export default function AdminServicios({
               className={claseInput("descripcion")}
             />
             {tocados.descripcion && erroresCampos.descripcion && (
-              <p className="mt-1 text-xs text-[--color-strawberry-deep]">
+              <p className="mt-1 text-xs text-strawberry-deep">
                 {erroresCampos.descripcion}
               </p>
             )}
           </div>
 
           {errorFormulario && (
-            <p className="text-sm text-[--color-strawberry-deep] sm:col-span-2">
+            <p className="text-sm text-strawberry-deep sm:col-span-2">
               {errorFormulario}
             </p>
           )}
@@ -391,7 +391,7 @@ export default function AdminServicios({
             <button
               type="submit"
               disabled={enviando || (Object.keys(tocados).length > 0 && !formularioValido)}
-              className="rounded-lg bg-gradient-to-r from-[#f43f5e] to-[#db2777] px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:from-[#e11d48] hover:to-[#be185d] disabled:opacity-60"
+              className="rounded-lg bg-strawberry-deep hover:bg-strawberry px-4 py-2 text-sm font-semibold text-white shadow-sm transition disabled:opacity-60"
             >
               {enviando
                 ? "Guardando..."
@@ -402,7 +402,7 @@ export default function AdminServicios({
             <button
               type="button"
               onClick={cancelarEdicion}
-              className="rounded-lg border border-[--color-border-soft] px-4 py-2 text-sm hover:bg-[--color-cream]"
+              className="rounded-lg border border-border-soft px-4 py-2 text-sm hover:bg-cream"
             >
               Cancelar
             </button>

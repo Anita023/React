@@ -3,10 +3,10 @@ import { useAuth } from "../../context/AuthContext";
 import { listarPQR, responderPQR, cambiarEstadoPQR } from "../../lib/api";
 
 const ESTILOS_ESTADO = {
-  pendiente: "bg-[#fef3c7] text-[#92400e]",
-  en_proceso: "bg-[#e0f2fe] text-[#0369a1]",
-  respondida: "bg-[#d1fae5] text-[#047857]",
-  cerrada: "bg-[#e5e7eb] text-[#374151]",
+  pendiente: "bg-caramel-soft text-caramel-deep",
+  en_proceso: "bg-skyblue-soft text-skyblue-deep",
+  respondida: "bg-pistachio-soft text-pistachio-deep",
+  cerrada: "bg-border-soft text-choco-soft",
 };
 
 const ETIQUETAS_ESTADO = {
@@ -87,13 +87,13 @@ export default function AdminPQR() {
   return (
     <div>
       <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
-        <p className="text-sm text-[--color-choco-soft]">
+        <p className="text-sm text-choco-soft">
           Gestiona las peticiones, quejas, reclamos y sugerencias de los clientes.
         </p>
         <select
           value={filtroEstado}
           onChange={(e) => setFiltroEstado(e.target.value)}
-          className="rounded-lg border border-[--color-border-soft] px-3 py-2 text-sm"
+          className="rounded-lg border border-border-soft px-3 py-2 text-sm"
         >
           {OPCIONES_ESTADO_FILTRO.map((op) => (
             <option key={op.value} value={op.value}>
@@ -103,21 +103,21 @@ export default function AdminPQR() {
         </select>
       </div>
 
-      {mensaje && <p className="mb-4 text-sm font-semibold text-[#047857]">{mensaje}</p>}
-      {error && <p className="mb-4 text-sm text-[--color-strawberry-deep]">{error}</p>}
+      {mensaje && <p className="mb-4 text-sm font-semibold text-pistachio-deep">{mensaje}</p>}
+      {error && <p className="mb-4 text-sm text-strawberry-deep">{error}</p>}
 
-      <div className="overflow-hidden rounded-xl border border-[--color-border-soft] bg-white shadow-[--shadow-soft]">
+      <div className="overflow-hidden rounded-xl border border-border-soft bg-white shadow-soft">
         {cargando ? (
-          <p className="p-6 text-sm text-[--color-choco-soft]">Cargando...</p>
+          <p className="p-6 text-sm text-choco-soft">Cargando...</p>
         ) : lista.length === 0 ? (
-          <p className="p-6 text-sm text-[--color-choco-soft]">
+          <p className="p-6 text-sm text-choco-soft">
             No hay PQR con este filtro.
           </p>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-[#ffe4e6] bg-[#fff1f2] text-left text-xs uppercase tracking-wide text-[#9f1239]/70">
+                <tr className="border-b border-strawberry-soft bg-strawberry-soft text-left text-xs uppercase tracking-wide text-strawberry-deep/70">
                   <th className="px-4 py-3">Cliente</th>
                   <th className="px-4 py-3">Tipo</th>
                   <th className="px-4 py-3">Asunto</th>
@@ -130,14 +130,14 @@ export default function AdminPQR() {
                 {lista.map((item) => (
                   <tr
                     key={item.id}
-                    className="border-b border-[--color-border-soft] last:border-0 hover:bg-[--color-cream]/40"
+                    className="border-b border-border-soft last:border-0 hover:bg-cream/40"
                   >
                     <td className="px-4 py-3">
-                      <p className="font-medium text-[--color-choco]">{item.usuario_nombre}</p>
-                      <p className="text-xs text-[--color-choco-soft]">{item.usuario_correo}</p>
+                      <p className="font-medium text-choco">{item.usuario_nombre}</p>
+                      <p className="text-xs text-choco-soft">{item.usuario_correo}</p>
                     </td>
-                    <td className="px-4 py-3 capitalize text-[--color-choco-soft]">{item.tipo}</td>
-                    <td className="max-w-xs px-4 py-3 text-[--color-choco]">{item.asunto}</td>
+                    <td className="px-4 py-3 capitalize text-choco-soft">{item.tipo}</td>
+                    <td className="max-w-xs px-4 py-3 text-choco">{item.asunto}</td>
                     <td className="px-4 py-3">
                       <span
                         className={`rounded-full px-2.5 py-1 text-xs font-semibold ${ESTILOS_ESTADO[item.estado] || ""}`}
@@ -145,7 +145,7 @@ export default function AdminPQR() {
                         {ETIQUETAS_ESTADO[item.estado] || item.estado}
                       </span>
                     </td>
-                    <td className="px-4 py-3 text-[--color-choco-soft]">
+                    <td className="px-4 py-3 text-choco-soft">
                       {item.creado_en &&
                         new Date(item.creado_en).toLocaleDateString("es-CO", {
                           day: "2-digit",
@@ -156,14 +156,14 @@ export default function AdminPQR() {
                       {item.estado === "pendiente" && (
                         <button
                           onClick={() => marcarEnProceso(item)}
-                          className="text-[#0369a1] hover:underline"
+                          className="text-skyblue-deep hover:underline"
                         >
                           Marcar en proceso
                         </button>
                       )}
                       <button
                         onClick={() => abrirRespuesta(item)}
-                        className="text-[--color-strawberry-deep] hover:underline"
+                        className="text-strawberry-deep hover:underline"
                       >
                         {item.respuesta ? "Ver / editar" : "Responder"}
                       </button>
@@ -179,26 +179,26 @@ export default function AdminPQR() {
       {/* Panel modal simple para responder */}
       {pqrEnRespuesta && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-choco/45 p-4"
           onClick={() => setPqrEnRespuesta(null)}
         >
           <div
             className="w-full max-w-lg rounded-2xl bg-white p-6 shadow-lift"
             onClick={(e) => e.stopPropagation()}
           >
-            <h3 className="mb-1 font-display text-lg font-semibold text-[--color-choco]">
+            <h3 className="mb-1 font-display text-lg font-semibold text-choco">
               {pqrEnRespuesta.asunto}
             </h3>
-            <p className="mb-4 text-sm text-[--color-choco-soft]">
+            <p className="mb-4 text-sm text-choco-soft">
               {pqrEnRespuesta.usuario_nombre} · {pqrEnRespuesta.usuario_correo}
             </p>
-            <p className="mb-4 rounded-lg bg-[--color-cream]/60 p-3 text-sm text-[--color-choco]">
+            <p className="mb-4 rounded-lg bg-cream/60 p-3 text-sm text-choco">
               {pqrEnRespuesta.descripcion}
             </p>
 
             <form onSubmit={enviarRespuesta} className="space-y-3">
               <div>
-                <label className="mb-1 block text-xs font-medium text-[--color-choco-soft]">
+                <label className="mb-1 block text-xs font-medium text-choco-soft">
                   Respuesta
                 </label>
                 <textarea
@@ -207,18 +207,18 @@ export default function AdminPQR() {
                   required
                   minLength={3}
                   rows={4}
-                  className="w-full rounded-lg border border-[--color-border-soft] px-3 py-2 text-sm"
+                  className="w-full rounded-lg border border-border-soft px-3 py-2 text-sm"
                 />
               </div>
 
               <div>
-                <label className="mb-1 block text-xs font-medium text-[--color-choco-soft]">
+                <label className="mb-1 block text-xs font-medium text-choco-soft">
                   Estado final
                 </label>
                 <select
                   value={estadoRespuesta}
                   onChange={(e) => setEstadoRespuesta(e.target.value)}
-                  className="w-full rounded-lg border border-[--color-border-soft] px-3 py-2 text-sm"
+                  className="w-full rounded-lg border border-border-soft px-3 py-2 text-sm"
                 >
                   <option value="respondida">Respondida</option>
                   <option value="cerrada">Cerrada</option>
@@ -229,14 +229,14 @@ export default function AdminPQR() {
                 <button
                   type="submit"
                   disabled={enviando}
-                  className="rounded-lg bg-gradient-to-r from-[#f43f5e] to-[#db2777] px-4 py-2 text-sm font-semibold text-white shadow-sm disabled:opacity-60"
+                  className="rounded-lg bg-strawberry-deep hover:bg-strawberry px-4 py-2 text-sm font-semibold text-white shadow-sm disabled:opacity-60"
                 >
                   {enviando ? "Guardando..." : "Guardar respuesta"}
                 </button>
                 <button
                   type="button"
                   onClick={() => setPqrEnRespuesta(null)}
-                  className="rounded-lg border border-[--color-border-soft] px-4 py-2 text-sm hover:bg-[--color-cream]"
+                  className="rounded-lg border border-border-soft px-4 py-2 text-sm hover:bg-cream"
                 >
                   Cancelar
                 </button>

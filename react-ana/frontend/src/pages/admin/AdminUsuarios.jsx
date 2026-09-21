@@ -291,14 +291,14 @@ export default function AdminUsuarios({
     const conError = tocados[nombre] && erroresCampos[nombre];
     return `w-full rounded-lg border px-3 py-2 text-sm focus:outline-none ${
       conError
-        ? "border-[--color-strawberry-deep]"
-        : "border-[--color-border-soft] focus:border-[--color-strawberry-deep]"
+        ? "border-strawberry-deep"
+        : "border-border-soft focus:border-strawberry-deep"
     }`;
   }
 
   function CampoError({ nombre }) {
     if (!tocados[nombre] || !erroresCampos[nombre]) return null;
-    return <p className="mt-1 text-xs text-[--color-strawberry-deep]">{erroresCampos[nombre]}</p>;
+    return <p className="mt-1 text-xs text-strawberry-deep">{erroresCampos[nombre]}</p>;
   }
 
   return (
@@ -314,21 +314,21 @@ export default function AdminUsuarios({
         onAccion={esAdmin ? abrirFormulario : undefined}
       />
 
-      {mensaje && <p className="mb-4 text-sm text-[#047857]">{mensaje}</p>}
-      {error && <p className="mb-4 text-sm text-[--color-strawberry-deep]">{error}</p>}
+      {mensaje && <p className="mb-4 text-sm text-pistachio-deep">{mensaje}</p>}
+      {error && <p className="mb-4 text-sm text-strawberry-deep">{error}</p>}
 
-      <div className="overflow-hidden rounded-xl border border-[--color-border-soft] bg-white shadow-[--shadow-soft]">
+      <div className="overflow-hidden rounded-xl border border-border-soft bg-white shadow-soft">
         {cargando ? (
-          <p className="p-6 text-sm text-[--color-choco-soft]">Cargando usuarios...</p>
+          <p className="p-6 text-sm text-choco-soft">Cargando usuarios...</p>
         ) : usuariosFiltrados.length === 0 ? (
-          <p className="p-6 text-sm text-[--color-choco-soft]">
+          <p className="p-6 text-sm text-choco-soft">
             No se encontraron usuarios con esos filtros.
           </p>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-[#e0f2fe] bg-[#f0f9ff] text-left text-xs uppercase tracking-wide text-[#075985]/70">
+                <tr className="border-b border-skyblue-soft bg-skyblue-soft text-left text-xs uppercase tracking-wide text-skyblue-deep/70">
                   <th className="px-4 py-3">Usuario</th>
                   <th className="px-4 py-3">Correo</th>
                   <th className="px-4 py-3">Estado</th>
@@ -342,27 +342,27 @@ export default function AdminUsuarios({
                   return (
                     <tr
                       key={usuario.id}
-                      className="border-b border-[--color-border-soft] last:border-0 hover:bg-[--color-cream]/40"
+                      className="border-b border-border-soft last:border-0 hover:bg-cream/40"
                     >
-                      <td className="px-4 py-3 font-medium text-[--color-choco]">
+                      <td className="px-4 py-3 font-medium text-choco">
                         {usuario.nombre
                           ? `${usuario.nombre} ${usuario.apellido || ""}`
                           : "—"}
                       </td>
-                      <td className="px-4 py-3 text-[--color-choco-soft]">
+                      <td className="px-4 py-3 text-choco-soft">
                         {usuario.correo}
                       </td>
                       <td className="px-4 py-3">
                         <span
                           className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold ${
                             usuario.estado === "activo"
-                              ? "bg-[#d1fae5] text-[#047857]"
-                              : "bg-[--color-cream] text-[--color-choco-soft]"
+                              ? "bg-pistachio-soft text-pistachio-deep"
+                              : "bg-cream text-choco-soft"
                           }`}
                         >
                           <span
                             className={`h-1.5 w-1.5 rounded-full ${
-                              usuario.estado === "activo" ? "bg-[#22c55e]" : "bg-[#9ca3af]"
+                              usuario.estado === "activo" ? "bg-pistachio-deep" : "bg-choco-soft"
                             }`}
                           />
                           {usuario.estado === "activo" ? "Activo" : "Inactivo"}
@@ -373,14 +373,14 @@ export default function AdminUsuarios({
                           <button
                             onClick={() => manejarCambioEstado(usuario)}
                             disabled={esUsuarioActual}
-                            className="text-[#b45309] hover:underline disabled:text-[--color-choco-soft]/40"
+                            className="text-caramel-deep hover:underline disabled:text-choco-soft/40"
                           >
                             {usuario.estado === "activo" ? "Desactivar" : "Activar"}
                           </button>
                           <button
                             onClick={() => manejarEliminar(usuario)}
                             disabled={esUsuarioActual}
-                            className="text-[--color-strawberry-deep] hover:underline disabled:text-[--color-choco-soft]/40"
+                            className="text-strawberry-deep hover:underline disabled:text-choco-soft/40"
                           >
                             Eliminar
                           </button>
@@ -519,7 +519,7 @@ export default function AdminUsuarios({
               <button
                 type="button"
                 onClick={() => setVerPassword((v) => !v)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-[--color-choco-soft]"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-choco-soft"
               >
                 {verPassword ? "Ocultar" : "Ver"}
               </button>
@@ -541,7 +541,7 @@ export default function AdminUsuarios({
               <button
                 type="button"
                 onClick={() => setVerConfirmarPassword((v) => !v)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-[--color-choco-soft]"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-choco-soft"
               >
                 {verConfirmarPassword ? "Ocultar" : "Ver"}
               </button>
@@ -550,7 +550,7 @@ export default function AdminUsuarios({
           </div>
 
           {errorFormulario && (
-            <p className="text-sm text-[--color-strawberry-deep] sm:col-span-2">
+            <p className="text-sm text-strawberry-deep sm:col-span-2">
               {errorFormulario}
             </p>
           )}
@@ -559,14 +559,14 @@ export default function AdminUsuarios({
             <button
               type="submit"
               disabled={enviando || (Object.keys(tocados).length > 0 && !formularioValido)}
-              className="rounded-lg bg-gradient-to-r from-[#f43f5e] to-[#db2777] px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:from-[#e11d48] hover:to-[#be185d] disabled:opacity-60"
+              className="rounded-lg bg-strawberry-deep hover:bg-strawberry px-4 py-2 text-sm font-semibold text-white shadow-sm transition disabled:opacity-60"
             >
               {enviando ? "Creando..." : "Crear usuario"}
             </button>
             <button
               type="button"
               onClick={cerrarFormulario}
-              className="rounded-lg border border-[--color-border-soft] px-4 py-2 text-sm hover:bg-[--color-cream]"
+              className="rounded-lg border border-border-soft px-4 py-2 text-sm hover:bg-cream"
             >
               Cancelar
             </button>

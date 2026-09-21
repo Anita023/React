@@ -105,16 +105,21 @@ class Carrito(Base):
 
 class CarritoItem(Base):
     __tablename__ = "carrito_items"
-    __table_args__ = (UniqueConstraint("carrito_id", "producto_id", name="unico_producto_por_carrito"),)
+    __table_args__ = (
+        UniqueConstraint("carrito_id", "producto_id", name="unico_producto_por_carrito"),
+        UniqueConstraint("carrito_id", "servicio_id", name="unico_servicio_por_carrito"),
+    )
 
     id = Column(Integer, primary_key=True, index=True, autoincrement=True)
     carrito_id = Column(Integer, ForeignKey("carritos.id", ondelete="CASCADE"), nullable=False)
-    producto_id = Column(Integer, ForeignKey("productos.id", ondelete="CASCADE"), nullable=False)
+    producto_id = Column(Integer, ForeignKey("productos.id", ondelete="CASCADE"), nullable=True)
+    servicio_id = Column(Integer, ForeignKey("servicios.id", ondelete="CASCADE"), nullable=True)
     cantidad = Column(Integer, nullable=False, default=1)
     agregado_en = Column(TIMESTAMP, server_default=func.now())
 
     carrito = relationship("Carrito", back_populates="items")
     producto = relationship("Producto")
+    servicio = relationship("Servicio")
 
 
 class Pedido(Base):

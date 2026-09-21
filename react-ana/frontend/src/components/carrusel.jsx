@@ -45,7 +45,7 @@ function Carrusel() {
 
   return (
     <section
-      className="relative h-[460px] w-full overflow-hidden bg-cream-soft outline-none focus-visible:outline-2 focus-visible:outline-caramel sm:h-[560px] lg:h-[640px]"
+      className="relative w-full overflow-hidden bg-cream-soft outline-none focus-visible:outline-2 focus-visible:outline-caramel"
       role="region"
       aria-roledescription="carrusel"
       aria-label="Sabores destacados"
@@ -58,69 +58,79 @@ function Carrusel() {
       onTouchStart={manejarTouchStart}
       onTouchEnd={manejarTouchEnd}
     >
-      {/* Fondo desenfocado */}
+      {/* Textura de fondo: manchas suaves de color, quietas, sin distraer */}
       <div
-        key={`fondo-${actual}`}
-        className="absolute inset-0 z-0 scale-125 bg-cover bg-center brightness-[0.65] saturate-[1.1] blur-3xl"
-        style={{ backgroundImage: `url(${sabores[actual].imagen})` }}
+        className="pointer-events-none absolute -left-24 -top-24 h-72 w-72 rounded-full bg-strawberry/10 blur-3xl"
+        aria-hidden="true"
+      />
+      <div
+        className="pointer-events-none absolute -bottom-32 -right-16 h-80 w-80 rounded-full bg-caramel/15 blur-3xl"
         aria-hidden="true"
       />
 
-      {/* Imagen principal */}
-      <img
-        key={actual}
-        src={sabores[actual].imagen}
-        alt={sabores[actual].titulo}
-        className="relative z-10 mx-auto block h-full w-full animate-[carruselAparecer_0.7s_ease] object-contain motion-reduce:animate-none"
-      />
+      <div className="relative z-10 mx-auto grid max-w-6xl grid-cols-1 items-center gap-10 px-6 py-14 sm:py-16 lg:grid-cols-[1.05fr_1fr] lg:gap-12 lg:px-10 lg:py-24">
+        {/* Columna de texto */}
+        <div className="order-2 lg:order-1">
+          {/* Progreso: barras finas en vez de puntos genéricos */}
+          <div className="mb-6 flex gap-2" aria-hidden="true">
+            {sabores.map((item, index) => (
+              <button
+                key={item.id}
+                onClick={() => setActual(index)}
+                aria-label={`Mostrar ${item.titulo}`}
+                className={`h-1.5 rounded-full transition-all duration-500 ${
+                  actual === index
+                    ? "w-10 bg-strawberry"
+                    : "w-4 bg-choco/20 hover:bg-choco/40"
+                }`}
+              />
+            ))}
+          </div>
 
-      {/* Degradado inferior para legibilidad del texto */}
-      <div
-        className="pointer-events-none absolute inset-0 z-20 bg-gradient-to-t from-choco/80 via-choco/10 to-transparent"
-        aria-hidden="true"
-      />
+          <h2
+            key={actual}
+            className="mb-4 max-w-md animate-[carruselAparecer_0.7s_ease] font-display text-4xl font-semibold leading-[1.05] text-choco sm:text-5xl lg:text-6xl motion-reduce:animate-none"
+          >
+            {sabores[actual].titulo}
+          </h2>
 
-      <button
-        onClick={anterior}
-        aria-label="Imagen anterior"
-        className="absolute left-4 top-1/2 z-30 flex h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full bg-white/90 text-xl text-caramel-deep shadow-soft transition-all hover:scale-110 hover:bg-white sm:left-8 sm:h-14 sm:w-14"
-      >
-        ❮
-      </button>
+          <p className="mb-8 max-w-sm text-base leading-relaxed text-choco/70 sm:text-lg" aria-live="polite">
+            {sabores[actual].descripcion}
+          </p>
 
-      <button
-        onClick={siguiente}
-        aria-label="Imagen siguiente"
-        className="absolute right-4 top-1/2 z-30 flex h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full bg-white/90 text-xl text-caramel-deep shadow-soft transition-all hover:scale-110 hover:bg-white sm:right-8 sm:h-14 sm:w-14"
-      >
-        ❯
-      </button>
+          <div className="flex items-center gap-4">
+            <button
+              onClick={anterior}
+              aria-label="Sabor anterior"
+              className="flex h-11 w-11 items-center justify-center rounded-full border border-choco/15 text-lg text-choco transition-colors hover:border-strawberry hover:text-strawberry"
+            >
+              ❮
+            </button>
+            <button
+              onClick={siguiente}
+              aria-label="Sabor siguiente"
+              className="flex h-11 w-11 items-center justify-center rounded-full border border-choco/15 text-lg text-choco transition-colors hover:border-strawberry hover:text-strawberry"
+            >
+              ❯
+            </button>
+          </div>
+        </div>
 
-      <div
-        className="absolute inset-x-6 bottom-16 z-30 text-white sm:inset-x-auto sm:bottom-24 sm:left-[8%] sm:max-w-xl"
-        aria-live="polite"
-      >
-        <h2 className="mb-3 font-display text-3xl font-semibold text-white [text-shadow:0_2px_12px_rgb(0_0_0_/_0.25)] sm:text-5xl">
-          {sabores[actual].titulo}
-        </h2>
-        <p className="max-w-lg text-base leading-relaxed text-white/90 sm:text-lg">
-          {sabores[actual].descripcion}
-        </p>
-      </div>
-
-      <div className="absolute bottom-6 left-1/2 z-30 flex -translate-x-1/2 gap-2.5 sm:bottom-8">
-        {sabores.map((item, index) => (
-          <button
-            key={item.id}
-            onClick={() => setActual(index)}
-            aria-label={`Mostrar ${item.titulo}`}
-            className={`h-2.5 w-2.5 rounded-full transition-all sm:h-3 sm:w-3 ${
-              actual === index
-                ? "scale-125 bg-strawberry opacity-100"
-                : "bg-white opacity-50"
-            }`}
-          />
-        ))}
+        {/* Columna de imagen: la fotografía como protagonista, sin oscurecerla */}
+        <div className="order-1 lg:order-2">
+          <div className="relative mx-auto aspect-square w-full max-w-sm lg:max-w-none">
+            <div
+              className="absolute inset-4 rounded-[62%_38%_53%_47%/55%_47%_53%_45%] bg-caramel/20 blur-2xl"
+              aria-hidden="true"
+            />
+            <img
+              key={actual}
+              src={sabores[actual].imagen}
+              alt={sabores[actual].titulo}
+              className="relative h-full w-full animate-[carruselAparecer_0.7s_ease] rounded-[62%_38%_53%_47%/55%_47%_53%_45%] object-cover shadow-soft motion-reduce:animate-none"
+            />
+          </div>
+        </div>
       </div>
     </section>
   );

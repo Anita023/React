@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import DashboardLayout from "../components/admin/DashboardLayout";
-import { misPedidos, obtenerPerfil } from "../lib/api";
+import { misPedidos, obtenerPerfil, actualizarUsuario } from "../lib/api";
 import DashboardCliente from "./DashboardCliente";
 import MisPQR from "./MisPQR";
 
@@ -14,10 +14,10 @@ const ETIQUETAS_DOCUMENTO = {
 };
 
 const ESTILOS_ESTADO = {
-  pendiente: "bg-[--color-cream] text-[--color-caramel-deep]",
-  en_proceso: "bg-[--color-skyblue-soft] text-[--color-skyblue-deep]",
-  entregado: "bg-[--color-pistachio-soft] text-[--color-pistachio-deep]",
-  cancelado: "bg-[--color-strawberry-soft] text-[--color-strawberry-deep]",
+  pendiente: "bg-cream text-caramel-deep",
+  en_proceso: "bg-skyblue-soft text-skyblue-deep",
+  entregado: "bg-pistachio-soft text-pistachio-deep",
+  cancelado: "bg-strawberry-soft text-strawberry-deep",
 };
 
 const SECCIONES = [
@@ -37,6 +37,12 @@ export default function ClientePanel() {
   const [error, setError] = useState("");
   const [pedidoExpandido, setPedidoExpandido] = useState(null);
 
+  const [editandoDatos, setEditandoDatos] = useState(false);
+  const [formularioDatos, setFormularioDatos] = useState(null);
+  const [guardandoDatos, setGuardandoDatos] = useState(false);
+  const [errorDatos, setErrorDatos] = useState("");
+  const [mensajeDatos, setMensajeDatos] = useState("");
+
   useEffect(() => {
     Promise.all([obtenerPerfil(token), misPedidos(token)])
       .then(([datosPerfil, datosPedidos]) => {
@@ -51,6 +57,50 @@ export default function ClientePanel() {
   const nombre = perfil?.nombre ?? usuario?.nombre;
   const apellido = perfil?.apellido ?? usuario?.apellido;
 
+  function iniciarEdicionDatos() {
+    setFormularioDatos({
+      nombre: nombre || "",
+      apellido: apellido || "",
+      correo: usuario?.correo || "",
+      telefono: perfil?.telefono || "",
+      direccion: perfil?.direccion || "",
+    });
+    setErrorDatos("");
+    setMensajeDatos("");
+    setEditandoDatos(true);
+  }
+
+  function cancelarEdicionDatos() {
+    setEditandoDatos(false);
+    setFormularioDatos(null);
+    setErrorDatos("");
+  }
+
+  function manejarCambioDatos(e) {
+    const { name, value } = e.target;
+    setFormularioDatos((prev) => ({ ...prev, [name]: value }));
+  }
+
+  async function guardarDatos(e) {
+    e.preventDefault();
+    if (!perfil?.id) return;
+
+    setGuardandoDatos(true);
+    setErrorDatos("");
+    setMensajeDatos("");
+
+    try {
+      const datosActualizados = await actualizarUsuario(token, perfil.id, formularioDatos);
+      setPerfil((prev) => ({ ...prev, ...(datosActualizados.usuario || formularioDatos) }));
+      setMensajeDatos("Tus datos se actualizaron correctamente.");
+      setEditandoDatos(false);
+    } catch (err) {
+      setErrorDatos(err.message);
+    } finally {
+      setGuardandoDatos(false);
+    }
+  }
+
   return (
     <DashboardLayout
       rolEtiqueta="Cliente"
@@ -62,72 +112,200 @@ export default function ClientePanel() {
       tituloPagina={SECCIONES.find((s) => s.id === seccionActiva)?.etiqueta}
       onCerrarSesion={cerrarSesion}
     >
-      {error && <p className="mb-4 text-sm text-[--color-strawberry-deep]">{error}</p>}
+      {error && <p className="mb-4 text-sm text-strawberry-deep">{error}</p>}
 
       {seccionActiva === "dashboard" && <DashboardCliente />}
 
       {seccionActiva === "pqr" && <MisPQR />}
 
       {seccionActiva === "datos" && (
-        <div className="rounded-xl border border-[--color-border-soft] bg-white p-6 shadow-[--shadow-soft]">
-          <h2 className="mb-4 font-display text-lg font-semibold text-[--color-choco]">
-            Mis datos
-          </h2>
-
-          {cargando ? (
-            <p className="text-sm text-[--color-choco-soft]">Cargando tus datos...</p>
-          ) : (
-            <dl className="grid gap-4 text-sm sm:grid-cols-2">
+        <div className="overflow-hidden rounded-3xl border border-border-soft bg-white shadow-lift">
+          <div className="flex items-center justify-between bg-strawberry-soft px-7 py-6">
+            <div className="flex items-center gap-4">
+              <div className="flex h-14 w-14 items-center justify-center rounded-full bg-strawberry-deep hover:bg-strawberry font-display text-xl font-bold text-white shadow-soft">
+                {(nombre || "?").charAt(0).toUpperCase()}
+              </div>
               <div>
-                <dt className="text-[--color-choco-soft]">Nombre</dt>
-                <dd className="font-medium text-[--color-choco]">
+                <h2 className="font-display text-xl font-semibold text-choco">
                   {nombre} {apellido}
-                </dd>
+                </h2>
+                <p className="text-sm text-choco-soft">Cliente Sweet Ice</p>
               </div>
-              <div>
-                <dt className="text-[--color-choco-soft]">Correo</dt>
-                <dd className="font-medium text-[--color-choco]">{usuario?.correo}</dd>
-              </div>
-              {perfil?.tipo_documento && (
+            </div>
+
+            {!cargando && !editandoDatos && (
+              <button
+                onClick={iniciarEdicionDatos}
+                className="flex items-center gap-1.5 whitespace-nowrap rounded-full bg-strawberry-deep hover:bg-strawberry px-5 py-2.5 text-sm font-bold text-white shadow-soft transition-all hover:-translate-y-0.5 hover:shadow-lift"
+              >
+                ✎ Editar
+              </button>
+            )}
+          </div>
+
+          <div className="p-7">
+            {mensajeDatos && (
+              <p className="mb-5 rounded-xl bg-pistachio-soft px-4 py-2.5 text-sm font-semibold text-pistachio-deep">
+                ✓ {mensajeDatos}
+              </p>
+            )}
+
+            {cargando ? (
+              <p className="text-sm text-choco-soft">Cargando tus datos...</p>
+            ) : editandoDatos ? (
+              <form onSubmit={guardarDatos} className="grid gap-5 text-sm sm:grid-cols-2">
                 <div>
-                  <dt className="text-[--color-choco-soft]">Documento</dt>
-                  <dd className="font-medium text-[--color-choco]">
-                    {ETIQUETAS_DOCUMENTO[perfil.tipo_documento] || perfil.tipo_documento}{" "}
-                    #{perfil.numero_documento}
+                  <label className="mb-1.5 block text-xs font-bold uppercase tracking-wide text-strawberry-deep">
+                    Nombre
+                  </label>
+                  <input
+                    name="nombre"
+                    value={formularioDatos.nombre}
+                    onChange={manejarCambioDatos}
+                    required
+                    minLength={2}
+                    className="w-full rounded-xl border border-border-soft bg-cream/40 px-4 py-2.5 text-sm text-choco transition-colors focus:border-strawberry-deep focus:bg-white focus:outline-none focus:ring-2 focus:ring-strawberry-soft"
+                  />
+                </div>
+
+                <div>
+                  <label className="mb-1.5 block text-xs font-bold uppercase tracking-wide text-strawberry-deep">
+                    Apellido
+                  </label>
+                  <input
+                    name="apellido"
+                    value={formularioDatos.apellido}
+                    onChange={manejarCambioDatos}
+                    required
+                    minLength={2}
+                    className="w-full rounded-xl border border-border-soft bg-cream/40 px-4 py-2.5 text-sm text-choco transition-colors focus:border-strawberry-deep focus:bg-white focus:outline-none focus:ring-2 focus:ring-strawberry-soft"
+                  />
+                </div>
+
+                <div>
+                  <label className="mb-1.5 block text-xs font-bold uppercase tracking-wide text-strawberry-deep">
+                    Correo
+                  </label>
+                  <input
+                    type="email"
+                    name="correo"
+                    value={formularioDatos.correo}
+                    onChange={manejarCambioDatos}
+                    required
+                    className="w-full rounded-xl border border-border-soft bg-cream/40 px-4 py-2.5 text-sm text-choco transition-colors focus:border-strawberry-deep focus:bg-white focus:outline-none focus:ring-2 focus:ring-strawberry-soft"
+                  />
+                </div>
+
+                <div>
+                  <label className="mb-1.5 block text-xs font-bold uppercase tracking-wide text-strawberry-deep">
+                    Teléfono
+                  </label>
+                  <input
+                    name="telefono"
+                    value={formularioDatos.telefono}
+                    onChange={manejarCambioDatos}
+                    className="w-full rounded-xl border border-border-soft bg-cream/40 px-4 py-2.5 text-sm text-choco transition-colors focus:border-strawberry-deep focus:bg-white focus:outline-none focus:ring-2 focus:ring-strawberry-soft"
+                  />
+                </div>
+
+                <div className="sm:col-span-2">
+                  <label className="mb-1.5 block text-xs font-bold uppercase tracking-wide text-strawberry-deep">
+                    Dirección
+                  </label>
+                  <input
+                    name="direccion"
+                    value={formularioDatos.direccion}
+                    onChange={manejarCambioDatos}
+                    className="w-full rounded-xl border border-border-soft bg-cream/40 px-4 py-2.5 text-sm text-choco transition-colors focus:border-strawberry-deep focus:bg-white focus:outline-none focus:ring-2 focus:ring-strawberry-soft"
+                  />
+                </div>
+
+                {errorDatos && (
+                  <p className="rounded-xl bg-strawberry-soft px-4 py-2.5 text-sm font-semibold text-strawberry-deep sm:col-span-2">
+                    {errorDatos}
+                  </p>
+                )}
+
+                <div className="flex gap-3 pt-2 sm:col-span-2">
+                  <button
+                    type="submit"
+                    disabled={guardandoDatos}
+                    className="rounded-full bg-strawberry-deep hover:bg-strawberry px-6 py-3 text-sm font-bold text-white shadow-soft transition-all hover:-translate-y-0.5 hover:shadow-lift disabled:opacity-60 disabled:hover:translate-y-0"
+                  >
+                    {guardandoDatos ? "Guardando..." : "Guardar cambios"}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={cancelarEdicionDatos}
+                    className="rounded-full border border-border-soft bg-white px-6 py-3 text-sm font-semibold text-choco transition-colors hover:bg-cream-soft"
+                  >
+                    Cancelar
+                  </button>
+                </div>
+              </form>
+            ) : (
+              <dl className="grid gap-5 text-sm sm:grid-cols-2">
+                <div className="rounded-2xl bg-cream/50 p-4">
+                  <dt className="mb-1 flex items-center gap-1.5 text-xs font-bold uppercase tracking-wide text-choco-soft">
+                    👤 Nombre
+                  </dt>
+                  <dd className="font-semibold text-choco">
+                    {nombre} {apellido}
                   </dd>
                 </div>
-              )}
-              {perfil?.telefono && (
-                <div>
-                  <dt className="text-[--color-choco-soft]">Teléfono</dt>
-                  <dd className="font-medium text-[--color-choco]">{perfil.telefono}</dd>
+                <div className="rounded-2xl bg-cream/50 p-4">
+                  <dt className="mb-1 flex items-center gap-1.5 text-xs font-bold uppercase tracking-wide text-choco-soft">
+                    ✉️ Correo
+                  </dt>
+                  <dd className="font-semibold text-choco">{usuario?.correo}</dd>
                 </div>
-              )}
-              {perfil?.direccion && (
-                <div className="sm:col-span-2">
-                  <dt className="text-[--color-choco-soft]">Dirección</dt>
-                  <dd className="font-medium text-[--color-choco]">{perfil.direccion}</dd>
-                </div>
-              )}
+                {perfil?.tipo_documento && (
+                  <div className="rounded-2xl bg-cream/50 p-4">
+                    <dt className="mb-1 flex items-center gap-1.5 text-xs font-bold uppercase tracking-wide text-choco-soft">
+                      🪪 Documento
+                    </dt>
+                    <dd className="font-semibold text-choco">
+                      {ETIQUETAS_DOCUMENTO[perfil.tipo_documento] || perfil.tipo_documento}{" "}
+                      #{perfil.numero_documento}
+                    </dd>
+                  </div>
+                )}
+                {perfil?.telefono && (
+                  <div className="rounded-2xl bg-cream/50 p-4">
+                    <dt className="mb-1 flex items-center gap-1.5 text-xs font-bold uppercase tracking-wide text-choco-soft">
+                      📞 Teléfono
+                    </dt>
+                    <dd className="font-semibold text-choco">{perfil.telefono}</dd>
+                  </div>
+                )}
+                {perfil?.direccion && (
+                  <div className="rounded-2xl bg-cream/50 p-4 sm:col-span-2">
+                    <dt className="mb-1 flex items-center gap-1.5 text-xs font-bold uppercase tracking-wide text-choco-soft">
+                      📍 Dirección
+                    </dt>
+                    <dd className="font-semibold text-choco">{perfil.direccion}</dd>
+                  </div>
+                )}
             </dl>
           )}
+          </div>
         </div>
       )}
 
       {seccionActiva === "pedidos" && (
         <div className="space-y-3">
           {cargando && (
-            <p className="text-sm text-[--color-choco-soft]">Cargando tus pedidos...</p>
+            <p className="text-sm text-choco-soft">Cargando tus pedidos...</p>
           )}
 
           {!cargando && pedidos.length === 0 && (
-            <div className="rounded-xl border border-dashed border-[--color-border-soft] bg-white p-8 text-center">
-              <p className="text-sm text-[--color-choco-soft]">
+            <div className="rounded-xl border border-dashed border-border-soft bg-white p-8 text-center">
+              <p className="text-sm text-choco-soft">
                 Todavía no has hecho ningún pedido.
               </p>
               <Link
                 to="/"
-                className="mt-3 inline-block text-sm font-semibold text-[--color-skyblue-deep] hover:underline"
+                className="mt-3 inline-block text-sm font-semibold text-skyblue-deep hover:underline"
               >
                 Ver el menú →
               </Link>
@@ -139,7 +317,7 @@ export default function ClientePanel() {
             return (
               <div
                 key={pedido.id}
-                className="overflow-hidden rounded-xl border border-[--color-border-soft] bg-white shadow-[--shadow-soft] transition-shadow hover:shadow-md"
+                className="overflow-hidden rounded-xl border border-border-soft bg-white shadow-soft transition-shadow hover:shadow-md"
               >
                 <button
                   onClick={() => setPedidoExpandido(expandido ? null : pedido.id)}
@@ -147,8 +325,8 @@ export default function ClientePanel() {
                   aria-expanded={expandido}
                 >
                   <div>
-                    <p className="font-medium text-[--color-choco]">Pedido #{pedido.id}</p>
-                    <p className="text-sm text-[--color-choco-soft]">
+                    <p className="font-medium text-choco">Pedido #{pedido.id}</p>
+                    <p className="text-sm text-choco-soft">
                       {new Date(pedido.creado_en).toLocaleDateString("es-CO", {
                         day: "numeric",
                         month: "long",
@@ -159,16 +337,16 @@ export default function ClientePanel() {
                   <div className="flex items-center gap-3">
                     <span
                       className={`rounded-full px-2.5 py-1 text-xs font-semibold capitalize ${
-                        ESTILOS_ESTADO[pedido.estado] || "bg-[--color-cream]"
+                        ESTILOS_ESTADO[pedido.estado] || "bg-cream"
                       }`}
                     >
                       {pedido.estado}
                     </span>
-                    <p className="font-display text-base font-semibold text-[--color-choco]">
+                    <p className="font-display text-base font-semibold text-choco">
                       ${Number(pedido.total).toLocaleString("es-CO")}
                     </p>
                     <span
-                      className={`text-[--color-choco-soft] transition-transform duration-200 ${
+                      className={`text-choco-soft transition-transform duration-200 ${
                         expandido ? "rotate-180" : ""
                       }`}
                     >
@@ -183,13 +361,13 @@ export default function ClientePanel() {
                   }`}
                 >
                   <div className="overflow-hidden">
-                    <div className="flex items-center justify-between border-t border-[--color-border-soft] bg-[--color-cream]/40 px-5 py-3">
-                      <p className="text-sm text-[--color-choco-soft]">
+                    <div className="flex items-center justify-between border-t border-border-soft bg-cream/40 px-5 py-3">
+                      <p className="text-sm text-choco-soft">
                         Consulta el detalle completo y descarga tu comprobante.
                       </p>
                       <Link
                         to={`/factura/${pedido.id}`}
-                        className="whitespace-nowrap text-sm font-semibold text-[--color-skyblue-deep] hover:underline"
+                        className="whitespace-nowrap text-sm font-semibold text-skyblue-deep hover:underline"
                       >
                         Ver factura →
                       </Link>

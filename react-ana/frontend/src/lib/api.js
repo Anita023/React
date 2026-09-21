@@ -210,6 +210,17 @@ export function agregarAlCarrito(token, productoId, cantidad = 1) {
   });
 }
 
+// Igual que agregarAlCarrito, pero para un servicio (domicilio, personalización,
+// eventos, etc.). Manda "tipo: servicio" para que el backend lo distinga de un
+// producto — el backend debe soportar este campo en el endpoint POST /carrito.
+export function agregarServicioAlCarrito(token, servicioId, cantidad = 1) {
+  return peticion("/carrito", {
+    method: "POST",
+    token,
+    body: { servicioId, cantidad, tipo: "servicio" },
+  });
+}
+
 export function actualizarCantidadCarrito(token, itemId, cantidad) {
   return peticion(`/carrito/${itemId}`, {
     method: "PUT",

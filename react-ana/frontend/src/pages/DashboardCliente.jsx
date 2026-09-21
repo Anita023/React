@@ -22,9 +22,9 @@ const TARJETAS_CONFIG = [
 ];
 
 const ESTILOS_COLOR = {
-  sky: "bg-[#e0f2fe] text-[#0369a1]",
-  rose: "bg-[#ffe4e6] text-[#be123c]",
-  amber: "bg-[#fef3c7] text-[#b45309]",
+  sky: "bg-skyblue-soft text-skyblue-deep",
+  rose: "bg-strawberry-soft text-strawberry-deep",
+  amber: "bg-caramel-soft text-caramel-deep",
 };
 
 export default function DashboardCliente() {

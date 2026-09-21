@@ -142,6 +142,15 @@ function Header() {
                 |
               </span>
               <Link
+                to="/carrito"
+                className="text-lg font-semibold text-caramel-deep transition-colors hover:text-strawberry-deep"
+              >
+                Carrito
+              </Link>
+              <span className="text-caramel-soft" aria-hidden="true">
+                |
+              </span>
+              <Link
                 to="/login"
                 className="rounded-full bg-caramel px-8 py-3.5 text-lg font-bold text-white shadow-soft transition-all hover:-translate-y-0.5 hover:bg-caramel-deep hover:shadow-lift"
               >
@@ -225,13 +234,22 @@ function Header() {
               </button>
             </>
           ) : (
-            <Link
-              to="/login"
-              onClick={() => setMenuAbierto(false)}
-              className="mt-2 w-full rounded-full bg-caramel px-8 py-3.5 text-center text-lg font-bold text-white shadow-soft transition-all hover:bg-caramel-deep"
-            >
-              Iniciar Sesión
-            </Link>
+            <>
+              <Link
+                to="/carrito"
+                onClick={() => setMenuAbierto(false)}
+                className="w-full rounded-2xl px-4 py-3 text-center text-lg font-semibold text-caramel-deep transition-colors hover:bg-caramel-soft"
+              >
+                Carrito
+              </Link>
+              <Link
+                to="/login"
+                onClick={() => setMenuAbierto(false)}
+                className="mt-2 w-full rounded-full bg-caramel px-8 py-3.5 text-center text-lg font-bold text-white shadow-soft transition-all hover:bg-caramel-deep"
+              >
+                Iniciar Sesión
+              </Link>
+            </>
           )}
         </div>
       </nav>

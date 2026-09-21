@@ -58,30 +58,32 @@
   --radius-blob: 42% 58% 63% 37% / 41% 44% 56% 59%;
 }
 
-html {
-  scroll-behavior: smooth;
-}
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
 
-body {
-  font-family: var(--font-body);
-  background: var(--color-cream);
-  color: var(--color-caramel-deep);
-  -webkit-font-smoothing: antialiased;
-}
+  body {
+    font-family: var(--font-body);
+    background: var(--color-cream);
+    color: var(--color-caramel-deep);
+    -webkit-font-smoothing: antialiased;
+  }
 
-h1, h2, h3, h4 {
-  font-family: var(--font-display);
-  color: var(--color-caramel-deep);
-}
+  h1, h2, h3, h4 {
+    font-family: var(--font-display);
+    color: var(--color-caramel-deep);
+  }
 
-::selection {
-  background: var(--color-strawberry-soft);
-  color: var(--color-choco);
-}
+  ::selection {
+    background: var(--color-strawberry-soft);
+    color: var(--color-choco);
+  }
 
-:focus-visible {
-  outline: 2px solid var(--color-caramel);
-  outline-offset: 3px;
+  :focus-visible {
+    outline: 2px solid var(--color-caramel);
+    outline-offset: 3px;
+  }
 }
 
 @keyframes fadeIn {

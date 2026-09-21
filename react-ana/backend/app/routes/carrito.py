@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 
 from ..database import get_db
 from ..dependencies import get_current_user
-from ..models import Carrito, CarritoItem, Producto, Usuario
+from ..models import Carrito, CarritoItem, Producto, Servicio, Usuario
 from ..schemas import CarritoAgregarRequest, CarritoCantidadRequest
 
 router = APIRouter(prefix="/api/carrito", tags=["Carrito"])
@@ -20,16 +20,32 @@ def _obtener_o_crear_carrito(db: Session, id_usuario: int) -> Carrito:
 
 
 def _carrito_a_dict(carrito: Carrito) -> dict:
-    items_out = [
-        {
-            "item_id": item.id,
-            "id_producto": item.producto_id,
-            "nombre": item.producto.nombre,
-            "precio": item.producto.precio,
-            "cantidad": item.cantidad,
-        }
-        for item in carrito.items
-    ]
+    items_out = []
+    for item in carrito.items:
+        if item.servicio_id:
+            items_out.append(
+                {
+                    "item_id": item.id,
+                    "id_producto": None,
+                    "id_servicio": item.servicio_id,
+                    "tipo": "servicio",
+                    "nombre": item.servicio.nombre,
+                    "precio": item.servicio.precio,
+                    "cantidad": item.cantidad,
+                }
+            )
+        else:
+            items_out.append(
+                {
+                    "item_id": item.id,
+                    "id_producto": item.producto_id,
+                    "id_servicio": None,
+                    "tipo": "producto",
+                    "nombre": item.producto.nombre,
+                    "precio": item.producto.precio,
+                    "cantidad": item.cantidad,
+                }
+            )
     total = sum(float(i["precio"]) * i["cantidad"] for i in items_out)
     return {"items": items_out, "total": total}
 
@@ -49,23 +65,38 @@ def agregar_al_carrito(
     db: Session = Depends(get_db),
     usuario_actual: Usuario = Depends(get_current_user),
 ):
-    producto = db.query(Producto).filter(Producto.id == datos.productoId).first()
-    if not producto or not producto.disponible:
-        raise HTTPException(status_code=404, detail="Producto no disponible")
-
     carrito = _obtener_o_crear_carrito(db, usuario_actual.id)
 
-    item = (
-        db.query(CarritoItem)
-        .filter(CarritoItem.carrito_id == carrito.id, CarritoItem.producto_id == datos.productoId)
-        .first()
-    )
+    if datos.servicioId:
+        servicio = db.query(Servicio).filter(Servicio.id == datos.servicioId).first()
+        if not servicio or not servicio.disponible:
+            raise HTTPException(status_code=404, detail="Servicio no disponible")
 
-    if item:
-        item.cantidad += datos.cantidad
+        item = (
+            db.query(CarritoItem)
+            .filter(CarritoItem.carrito_id == carrito.id, CarritoItem.servicio_id == datos.servicioId)
+            .first()
+        )
+        if item:
+            item.cantidad += datos.cantidad
+        else:
+            item = CarritoItem(carrito_id=carrito.id, servicio_id=datos.servicioId, cantidad=datos.cantidad)
+            db.add(item)
     else:
-        item = CarritoItem(carrito_id=carrito.id, producto_id=datos.productoId, cantidad=datos.cantidad)
-        db.add(item)
+        producto = db.query(Producto).filter(Producto.id == datos.productoId).first()
+        if not producto or not producto.disponible:
+            raise HTTPException(status_code=404, detail="Producto no disponible")
+
+        item = (
+            db.query(CarritoItem)
+            .filter(CarritoItem.carrito_id == carrito.id, CarritoItem.producto_id == datos.productoId)
+            .first()
+        )
+        if item:
+            item.cantidad += datos.cantidad
+        else:
+            item = CarritoItem(carrito_id=carrito.id, producto_id=datos.productoId, cantidad=datos.cantidad)
+            db.add(item)
 
     db.commit()
     db.refresh(carrito)

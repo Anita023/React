@@ -369,8 +369,8 @@ export default function AdminProductos({
     const conError = tocados[nombre] && erroresCampos[nombre];
     return `w-full rounded-lg border px-3 py-2 text-sm focus:outline-none ${
       conError
-        ? "border-[--color-strawberry-deep] focus:border-[--color-strawberry-deep]"
-        : "border-[--color-border-soft] focus:border-[--color-strawberry-deep]"
+        ? "border-strawberry-deep focus:border-strawberry-deep"
+        : "border-border-soft focus:border-strawberry-deep"
     }`;
   }
 
@@ -387,21 +387,21 @@ export default function AdminProductos({
         onAccion={abrirCrear}
       />
 
-      {mensaje && <p className="mb-4 text-sm text-[#047857]">{mensaje}</p>}
-      {error && <p className="mb-4 text-sm text-[--color-strawberry-deep]">{error}</p>}
+      {mensaje && <p className="mb-4 text-sm text-pistachio-deep">{mensaje}</p>}
+      {error && <p className="mb-4 text-sm text-strawberry-deep">{error}</p>}
 
-      <div className="overflow-hidden rounded-xl border border-[--color-border-soft] bg-white shadow-[--shadow-soft]">
+      <div className="overflow-hidden rounded-xl border border-border-soft bg-white shadow-soft">
         {cargando ? (
-          <p className="p-6 text-sm text-[--color-choco-soft]">Cargando productos...</p>
+          <p className="p-6 text-sm text-choco-soft">Cargando productos...</p>
         ) : productosFiltrados.length === 0 ? (
-          <p className="p-6 text-sm text-[--color-choco-soft]">
+          <p className="p-6 text-sm text-choco-soft">
             No se encontraron productos con esos filtros.
           </p>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-[#ffe4e6] bg-[#fff1f2] text-left text-xs uppercase tracking-wide text-[#9f1239]/70">
+                <tr className="border-b border-strawberry-soft bg-strawberry-soft text-left text-xs uppercase tracking-wide text-strawberry-deep/70">
                   <th className="px-4 py-3">Nombre</th>
                   <th className="px-4 py-3">Precio</th>
                   <th className="px-4 py-3">Estado</th>
@@ -412,25 +412,25 @@ export default function AdminProductos({
                 {productosFiltrados.map((producto) => (
                   <tr
                     key={producto.id}
-                    className="border-b border-[--color-border-soft] last:border-0 hover:bg-[--color-cream]/40"
+                    className="border-b border-border-soft last:border-0 hover:bg-cream/40"
                   >
-                    <td className="px-4 py-3 font-medium text-[--color-choco]">
+                    <td className="px-4 py-3 font-medium text-choco">
                       {producto.nombre}
                     </td>
-                    <td className="px-4 py-3 text-[--color-choco-soft]">
+                    <td className="px-4 py-3 text-choco-soft">
                       ${Number(producto.precio).toLocaleString("es-CO")}
                     </td>
                     <td className="px-4 py-3">
                       <span
                         className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold ${
                           producto.disponible
-                            ? "bg-[#d1fae5] text-[#047857]"
-                            : "bg-[--color-cream] text-[--color-choco-soft]"
+                            ? "bg-pistachio-soft text-pistachio-deep"
+                            : "bg-cream text-choco-soft"
                         }`}
                       >
                         <span
                           className={`h-1.5 w-1.5 rounded-full ${
-                            producto.disponible ? "bg-[#22c55e]" : "bg-[#9ca3af]"
+                            producto.disponible ? "bg-pistachio-deep" : "bg-choco-soft"
                           }`}
                         />
                         {producto.disponible ? "Disponible" : "No disponible"}
@@ -440,21 +440,21 @@ export default function AdminProductos({
                       {esAdmin && (
                         <button
                           onClick={() => iniciarEdicion(producto)}
-                          className="text-[#0369a1] hover:underline"
+                          className="text-skyblue-deep hover:underline"
                         >
                           Editar
                         </button>
                       )}
                       <button
                         onClick={() => alternarDisponibilidad(producto)}
-                        className="text-[#b45309] hover:underline"
+                        className="text-caramel-deep hover:underline"
                       >
                         {producto.disponible ? "Desactivar" : "Activar"}
                       </button>
                       {esAdmin && (
                         <button
                           onClick={() => manejarEliminar(producto)}
-                          className="text-[--color-strawberry-deep] hover:underline"
+                          className="text-strawberry-deep hover:underline"
                         >
                           Eliminar
                         </button>
@@ -486,10 +486,10 @@ export default function AdminProductos({
               onChange={manejarCambio}
               placeholder="slug (ej: chocolate-oscuro)"
               disabled={Boolean(editandoId)}
-              className={`${claseInput("slug")} disabled:bg-[--color-cream]`}
+              className={`${claseInput("slug")} disabled:bg-cream`}
             />
             {tocados.slug && erroresCampos.slug && (
-              <p className="mt-1 text-xs text-[--color-strawberry-deep]">{erroresCampos.slug}</p>
+              <p className="mt-1 text-xs text-strawberry-deep">{erroresCampos.slug}</p>
             )}
           </div>
 
@@ -502,7 +502,7 @@ export default function AdminProductos({
               className={claseInput("nombre")}
             />
             {tocados.nombre && erroresCampos.nombre && (
-              <p className="mt-1 text-xs text-[--color-strawberry-deep]">{erroresCampos.nombre}</p>
+              <p className="mt-1 text-xs text-strawberry-deep">{erroresCampos.nombre}</p>
             )}
           </div>
 
@@ -517,12 +517,12 @@ export default function AdminProductos({
               className={claseInput("precio")}
             />
             {tocados.precio && erroresCampos.precio && (
-              <p className="mt-1 text-xs text-[--color-strawberry-deep]">{erroresCampos.precio}</p>
+              <p className="mt-1 text-xs text-strawberry-deep">{erroresCampos.precio}</p>
             )}
           </div>
 
           <div>
-            <label className="mb-1.5 block text-xs font-medium text-[--color-choco-soft]">
+            <label className="mb-1.5 block text-xs font-medium text-choco-soft">
               Imagen del producto (opcional)
             </label>
             <div className="flex items-center gap-3">
@@ -530,27 +530,27 @@ export default function AdminProductos({
                 <img
                   src={previewImagen}
                   alt="Vista previa"
-                  className="h-12 w-12 shrink-0 rounded-lg border border-[--color-border-soft] object-cover"
+                  className="h-12 w-12 shrink-0 rounded-lg border border-border-soft object-cover"
                 />
               )}
               <input
                 type="file"
                 accept="image/*"
                 onChange={manejarSeleccionImagen}
-                className="w-full rounded-lg border border-[--color-border-soft] text-sm text-[--color-choco-soft] file:mr-3 file:rounded-md file:border-0 file:bg-[--color-cream] file:px-3 file:py-2 file:text-sm file:font-semibold file:text-[--color-choco] hover:file:bg-[--color-border-soft]"
+                className="w-full rounded-lg border border-border-soft text-sm text-choco-soft file:mr-3 file:rounded-md file:border-0 file:bg-cream file:px-3 file:py-2 file:text-sm file:font-semibold file:text-choco hover:file:bg-border-soft"
               />
               {previewImagen && (
                 <button
                   type="button"
                   onClick={quitarImagen}
-                  className="shrink-0 text-xs text-[--color-strawberry-deep] hover:underline"
+                  className="shrink-0 text-xs text-strawberry-deep hover:underline"
                 >
                   Quitar
                 </button>
               )}
             </div>
             {tocados.imagen_url && erroresCampos.imagen_url && (
-              <p className="mt-1 text-xs text-[--color-strawberry-deep]">
+              <p className="mt-1 text-xs text-strawberry-deep">
                 {erroresCampos.imagen_url}
               </p>
             )}
@@ -566,14 +566,14 @@ export default function AdminProductos({
               className={claseInput("descripcion")}
             />
             {tocados.descripcion && erroresCampos.descripcion && (
-              <p className="mt-1 text-xs text-[--color-strawberry-deep]">
+              <p className="mt-1 text-xs text-strawberry-deep">
                 {erroresCampos.descripcion}
               </p>
             )}
           </div>
 
           {errorFormulario && (
-            <p className="text-sm text-[--color-strawberry-deep] sm:col-span-2">
+            <p className="text-sm text-strawberry-deep sm:col-span-2">
               {errorFormulario}
             </p>
           )}
@@ -582,7 +582,7 @@ export default function AdminProductos({
             <button
               type="submit"
               disabled={enviando || (Object.keys(tocados).length > 0 && !formularioValido)}
-              className="rounded-lg bg-gradient-to-r from-[#f43f5e] to-[#db2777] px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:from-[#e11d48] hover:to-[#be185d] disabled:opacity-60"
+              className="rounded-lg bg-strawberry-deep hover:bg-strawberry px-4 py-2 text-sm font-semibold text-white shadow-sm transition disabled:opacity-60"
             >
               {enviando
                 ? "Guardando..."
@@ -593,7 +593,7 @@ export default function AdminProductos({
             <button
               type="button"
               onClick={cancelarEdicion}
-              className="rounded-lg border border-[--color-border-soft] px-4 py-2 text-sm hover:bg-[--color-cream]"
+              className="rounded-lg border border-border-soft px-4 py-2 text-sm hover:bg-cream"
             >
               Cancelar
             </button>

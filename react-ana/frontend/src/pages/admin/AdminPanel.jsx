@@ -8,6 +8,8 @@ import AdminProductos from "./AdminProductos";
 import AdminServicios from "./AdminServicios";
 import AdminUsuarios from "./AdminUsuarios";
 import AdminPQR from "./AdminPQR";
+import AdminVentas from "./AdminVentas";
+import AdminFacturas from "./AdminFacturas";
 
 const SECCIONES = [
   { id: "resumen", etiqueta: "Resumen", icono: "🏠" },
@@ -16,6 +18,8 @@ const SECCIONES = [
   { id: "productos", etiqueta: "Productos", icono: "🍦" },
   { id: "servicios", etiqueta: "Servicios", icono: "🎉" },
   { id: "pedidos", etiqueta: "Pedidos", icono: "🧾" },
+  { id: "ventas", etiqueta: "Ventas", icono: "💵" },
+  { id: "facturas", etiqueta: "Facturas", icono: "📄" },
   { id: "pqr", etiqueta: "PQR", icono: "📨" },
 ];
 
@@ -67,6 +71,8 @@ export default function AdminPanel() {
         />
       )}
       {seccionActiva === "pqr" && <AdminPQR />}
+      {seccionActiva === "ventas" && <AdminVentas />}
+      {seccionActiva === "facturas" && <AdminFacturas />}
     </DashboardLayout>
   );
 }

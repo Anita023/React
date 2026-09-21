@@ -49,17 +49,17 @@ export default function ChatWidget() {
 
   return (
     <>
-      {/* Botón flotante para abrir/cerrar */}
+      {/* Botón flotante para abrir/cerrar — apilado sobre el de WhatsApp */}
       <button
         onClick={() => setAbierto((prev) => !prev)}
         aria-label={abierto ? "Cerrar chat" : "Abrir chat de ayuda"}
-        className="fixed bottom-24 left-6 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-[#db2777] text-2xl text-white shadow-lg transition-all hover:-translate-y-1"
+        className="fixed bottom-24 right-6 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-[#db2777] text-2xl text-white shadow-lift ring-4 ring-white/40 transition-all hover:-translate-y-0.5 sm:bottom-28 sm:right-8"
       >
         {abierto ? "✕" : "💬"}
       </button>
 
       {abierto && (
-        <div className="fixed bottom-[168px] left-6 z-40 flex h-[480px] w-[340px] max-w-[calc(100vw-3rem)] flex-col overflow-hidden rounded-2xl border border-[#f1e4d8] bg-white shadow-2xl">
+        <div className="fixed bottom-[184px] right-6 z-40 flex h-[480px] w-[340px] max-w-[calc(100vw-3rem)] flex-col overflow-hidden rounded-2xl border border-[#f1e4d8] bg-white shadow-2xl sm:right-8">
           {/* Encabezado */}
           <div className="flex items-center gap-2 bg-[#db2777] px-4 py-3 text-white">
             <span className="text-lg">🍦</span>

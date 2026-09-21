@@ -18,10 +18,10 @@ const OPCIONES_ESTADO = [
 ];
 
 const ESTILOS_ESTADO = {
-  pendiente: "bg-[--color-cream] text-[#b45309]",
-  en_proceso: "bg-[#e0f2fe] text-[#0369a1]",
-  entregado: "bg-[#d1fae5] text-[#047857]",
-  cancelado: "bg-[--color-strawberry-soft] text-[--color-strawberry-deep]",
+  pendiente: "bg-cream text-caramel-deep",
+  en_proceso: "bg-skyblue-soft text-skyblue-deep",
+  entregado: "bg-pistachio-soft text-pistachio-deep",
+  cancelado: "bg-strawberry-soft text-strawberry-deep",
 };
 
 let contadorLinea = 0;
@@ -211,14 +211,14 @@ export default function AdminPedidos({
         onAccion={abrirFormulario}
       />
 
-      {mensaje && <p className="mb-4 text-sm text-[#047857]">{mensaje}</p>}
-      {error && <p className="mb-4 text-sm text-[--color-strawberry-deep]">{error}</p>}
+      {mensaje && <p className="mb-4 text-sm text-pistachio-deep">{mensaje}</p>}
+      {error && <p className="mb-4 text-sm text-strawberry-deep">{error}</p>}
 
-      <div className="overflow-hidden rounded-xl border border-[--color-border-soft] bg-white shadow-[--shadow-soft]">
+      <div className="overflow-hidden rounded-xl border border-border-soft bg-white shadow-soft">
         {cargando ? (
-          <p className="p-6 text-sm text-[--color-choco-soft]">Cargando pedidos...</p>
+          <p className="p-6 text-sm text-choco-soft">Cargando pedidos...</p>
         ) : pedidosFiltrados.length === 0 ? (
-          <p className="p-6 text-sm text-[--color-choco-soft]">
+          <p className="p-6 text-sm text-choco-soft">
             {pedidos.length === 0
               ? "Todavía no hay pedidos registrados."
               : "No se encontraron pedidos con esos filtros."}
@@ -227,7 +227,7 @@ export default function AdminPedidos({
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-[#d1fae5] bg-[#ecfdf5] text-left text-xs uppercase tracking-wide text-[#065f46]/70">
+                <tr className="border-b border-pistachio-soft bg-pistachio-soft text-left text-xs uppercase tracking-wide text-pistachio-deep/70">
                   <th className="px-4 py-3">#</th>
                   <th className="px-4 py-3">Cliente</th>
                   <th className="px-4 py-3">Total</th>
@@ -240,16 +240,16 @@ export default function AdminPedidos({
                 {pedidosFiltrados.map((pedido) => (
                   <tr
                     key={pedido.id}
-                    className="border-b border-[--color-border-soft] last:border-0 hover:bg-[--color-cream]/40"
+                    className="border-b border-border-soft last:border-0 hover:bg-cream/40"
                   >
-                    <td className="px-4 py-3 text-[--color-choco-soft]">{pedido.id}</td>
-                    <td className="px-4 py-3 font-medium text-[--color-choco]">
+                    <td className="px-4 py-3 text-choco-soft">{pedido.id}</td>
+                    <td className="px-4 py-3 font-medium text-choco">
                       {pedido.nombre ? `${pedido.nombre} ${pedido.apellido}` : pedido.correo}
                     </td>
-                    <td className="px-4 py-3 text-[--color-choco-soft]">
+                    <td className="px-4 py-3 text-choco-soft">
                       ${Number(pedido.total).toLocaleString("es-CO")}
                     </td>
-                    <td className="px-4 py-3 text-[--color-choco-soft]">
+                    <td className="px-4 py-3 text-choco-soft">
                       {new Date(pedido.creado_en).toLocaleDateString("es-CO")}
                     </td>
                     <td className="px-4 py-3">
@@ -257,7 +257,7 @@ export default function AdminPedidos({
                         value={pedido.estado}
                         onChange={(e) => manejarCambioEstado(pedido.id, e.target.value)}
                         className={`rounded-full border-0 px-2.5 py-1 text-xs font-semibold ${
-                          ESTILOS_ESTADO[pedido.estado] || "bg-[--color-cream]"
+                          ESTILOS_ESTADO[pedido.estado] || "bg-cream"
                         }`}
                       >
                         {ESTADOS.map((estado) => (
@@ -270,7 +270,7 @@ export default function AdminPedidos({
                     <td className="px-4 py-3">
                       <Link
                         to={`/factura/${pedido.id}`}
-                        className="text-[#0369a1] hover:underline"
+                        className="text-skyblue-deep hover:underline"
                       >
                         Ver factura
                       </Link>
@@ -291,8 +291,8 @@ export default function AdminPedidos({
       >
         <form onSubmit={manejarEnvioFormulario} className="grid gap-4">
           {/* Tarjeta: cliente */}
-          <div className="rounded-xl border border-[#e0f2fe] bg-[#f0f9ff]/60 p-4">
-            <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-[#075985]/70">
+          <div className="rounded-xl border border-skyblue-soft bg-skyblue-soft/60 p-4">
+            <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-skyblue-deep/70">
               Cliente
             </label>
             <input
@@ -303,18 +303,18 @@ export default function AdminPedidos({
               placeholder="correo@cliente.com"
               className={`w-full rounded-lg border bg-white px-3 py-2 text-sm focus:outline-none ${
                 correoTocado && errorCorreo
-                  ? "border-[--color-strawberry-deep] focus:border-[--color-strawberry-deep]"
-                  : "border-[#bae6fd] focus:border-[#38bdf8]"
+                  ? "border-strawberry-deep focus:border-strawberry-deep"
+                  : "border-skyblue-soft focus:border-skyblue"
               }`}
             />
             {correoTocado && errorCorreo && (
-              <p className="mt-1 text-xs text-[--color-strawberry-deep]">{errorCorreo}</p>
+              <p className="mt-1 text-xs text-strawberry-deep">{errorCorreo}</p>
             )}
           </div>
 
           {/* Tarjeta: productos */}
-          <div className="rounded-xl border border-[#ffe4e6] bg-[#fff1f2]/50 p-4">
-            <label className="mb-2 block text-xs font-semibold uppercase tracking-wide text-[#9f1239]/70">
+          <div className="rounded-xl border border-strawberry-soft bg-strawberry-soft/50 p-4">
+            <label className="mb-2 block text-xs font-semibold uppercase tracking-wide text-strawberry-deep/70">
               Productos
             </label>
 
@@ -326,7 +326,7 @@ export default function AdminPedidos({
                   <div key={linea.clave}>
                     <div
                       className={`flex gap-2 rounded-lg border bg-white p-2 shadow-sm ${
-                        mostrarError ? "border-[--color-strawberry-deep]" : "border-[#ffe4e6]"
+                        mostrarError ? "border-strawberry-deep" : "border-strawberry-soft"
                       }`}
                     >
                       <select
@@ -334,7 +334,7 @@ export default function AdminPedidos({
                         onChange={(e) =>
                           actualizarLinea(linea.clave, "producto_id", e.target.value)
                         }
-                        className="flex-1 rounded-lg border border-[--color-border-soft] px-3 py-2 text-sm focus:border-[#fb7185] focus:outline-none"
+                        className="flex-1 rounded-lg border border-border-soft px-3 py-2 text-sm focus:border-strawberry focus:outline-none"
                       >
                         <option value="">Selecciona un producto...</option>
                         {productos.map((producto) => (
@@ -351,20 +351,20 @@ export default function AdminPedidos({
                         onChange={(e) =>
                           actualizarLinea(linea.clave, "cantidad", e.target.value)
                         }
-                        className="w-16 rounded-lg border border-[--color-border-soft] px-2 py-2 text-center text-sm focus:border-[#fb7185] focus:outline-none"
+                        className="w-16 rounded-lg border border-border-soft px-2 py-2 text-center text-sm focus:border-strawberry focus:outline-none"
                       />
                       <button
                         type="button"
                         onClick={() => quitarLinea(linea.clave)}
                         disabled={lineas.length === 1}
-                        className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-[#f43f5e] transition hover:bg-[#ffe4e6] disabled:opacity-30"
+                        className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-strawberry transition hover:bg-strawberry-soft disabled:opacity-30"
                         aria-label="Quitar producto"
                       >
                         ✕
                       </button>
                     </div>
                     {mostrarError && (
-                      <p className="mt-1 text-xs text-[--color-strawberry-deep]">
+                      <p className="mt-1 text-xs text-strawberry-deep">
                         {mensajeErrorLinea}
                       </p>
                     )}
@@ -376,38 +376,38 @@ export default function AdminPedidos({
             <button
               type="button"
               onClick={agregarLinea}
-              className="mt-3 w-full rounded-lg border border-dashed border-[#fda4af] py-2 text-sm font-semibold text-[#e11d48] transition hover:bg-[#ffe4e6]/60"
+              className="mt-3 w-full rounded-lg border border-dashed border-strawberry-soft py-2 text-sm font-semibold text-strawberry-deep transition hover:bg-strawberry-soft/60"
             >
               + Agregar otro producto
             </button>
           </div>
 
           {/* Total */}
-          <div className="flex items-center justify-between rounded-xl bg-gradient-to-r from-[#fffbeb] to-[#fff1f2] px-4 py-3">
-            <span className="text-sm font-medium text-[--color-choco-soft]">
+          <div className="flex items-center justify-between rounded-xl bg-strawberry-soft px-4 py-3">
+            <span className="text-sm font-medium text-choco-soft">
               Total estimado
             </span>
-            <span className="font-display text-xl font-semibold text-[--color-choco]">
+            <span className="font-display text-xl font-semibold text-choco">
               ${totalEstimado.toLocaleString("es-CO")}
             </span>
           </div>
 
           {errorFormulario && (
-            <p className="text-sm text-[--color-strawberry-deep]">{errorFormulario}</p>
+            <p className="text-sm text-strawberry-deep">{errorFormulario}</p>
           )}
 
           <div className="flex gap-3 pt-1">
             <button
               type="submit"
               disabled={enviando || (correoTocado && !formularioValido)}
-              className="rounded-lg bg-gradient-to-r from-[#f43f5e] to-[#db2777] px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:from-[#e11d48] hover:to-[#be185d] disabled:opacity-60"
+              className="rounded-lg bg-strawberry-deep hover:bg-strawberry px-4 py-2 text-sm font-semibold text-white shadow-sm transition disabled:opacity-60"
             >
               {enviando ? "Creando..." : "Crear pedido"}
             </button>
             <button
               type="button"
               onClick={cerrarFormulario}
-              className="rounded-lg border border-[--color-border-soft] px-4 py-2 text-sm hover:bg-[--color-cream]"
+              className="rounded-lg border border-border-soft px-4 py-2 text-sm hover:bg-cream"
             >
               Cancelar
             </button>
