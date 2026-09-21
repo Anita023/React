@@ -6,9 +6,10 @@ from sqlalchemy.orm import Session, joinedload
 
 from ..database import get_db
 from ..dependencies import get_current_user, require_roles
-from ..models import Carrito, CarritoItem, Pedido, PedidoItem, PedidoServicio, Producto, Usuario
+from ..models import Carrito, CarritoItem, Pedido, PedidoItem, PedidoServicio, Producto, Usuario, Venta
 from ..schemas import PedidoCrear, PedidoEstadoUpdate
 from ..utils_correo import enviar_factura_pedido
+from .ventas import crear_venta_desde_pedido
 
 router = APIRouter(prefix="/api/pedidos", tags=["Pedidos"])
 
@@ -262,4 +263,23 @@ def actualizar_estado_pedido(
     pedido.estado = datos.estado
     db.commit()
     db.refresh(pedido)
-    return {"pedido": _pedido_a_dict(pedido, incluir_cliente=True)}
+
+    respuesta = {"pedido": _pedido_a_dict(pedido, incluir_cliente=True)}
+
+    # Un pedido entregado es una venta concretada: se registra automáticamente
+    # en el módulo de ventas (una sola vez por pedido), para que el historial,
+    # los dashboards y las "compras realizadas" del cliente reflejen la realidad.
+    if datos.estado == "entregado" and not pedido.venta:
+        try:
+            crear_venta_desde_pedido(pedido_id=pedido.id, db=db, usuario_actual=usuario_actual)
+            venta = db.query(Venta).filter(Venta.pedido_id == pedido.id).first()
+            if venta:
+                respuesta["venta_id"] = venta.id
+        except HTTPException as error:
+            # El cambio de estado ya quedó guardado; solo avisamos que la venta no se pudo crear.
+            db.rollback()
+            respuesta["aviso"] = (
+                f"El pedido quedó como entregado, pero no se registró la venta: {error.detail}"
+            )
+
+    return respuesta

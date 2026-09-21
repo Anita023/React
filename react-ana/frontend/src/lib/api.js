@@ -277,6 +277,10 @@ export function obtenerDashboardAdmin(token) {
   return peticion("/dashboard/admin", { token });
 }
 
+export function obtenerDashboardEmpleado(token) {
+  return peticion("/dashboard/empleado", { token });
+}
+
 export function obtenerDashboardVentas(token, filtros = {}) {
   const params = new URLSearchParams(
     Object.entries(filtros).filter(([, v]) => v !== undefined && v !== null && v !== "")

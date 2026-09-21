@@ -104,8 +104,13 @@ export default function AdminPedidos({
     setMensaje("");
     setError("");
     try {
-      await actualizarEstadoPedido(token, id, nuevoEstado);
-      setMensaje("Estado del pedido actualizado");
+      const datos = await actualizarEstadoPedido(token, id, nuevoEstado);
+      setMensaje(
+        datos?.venta_id
+          ? `Estado actualizado y venta #${datos.venta_id} registrada`
+          : "Estado del pedido actualizado"
+      );
+      if (datos?.aviso) setError(datos.aviso);
       cargarPedidos();
     } catch (err) {
       setError(err.message);

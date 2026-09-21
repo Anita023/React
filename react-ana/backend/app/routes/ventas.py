@@ -68,6 +68,10 @@ def crear_venta(
         pedido = db.query(Pedido).filter(Pedido.id == datos.pedido_id).first()
         if not pedido:
             raise HTTPException(status_code=404, detail="Pedido no encontrado")
+        if pedido.estado == "cancelado":
+            raise HTTPException(
+                status_code=400, detail="No se puede registrar una venta de un pedido cancelado"
+            )
         if db.query(Venta).filter(Venta.pedido_id == datos.pedido_id).first():
             raise HTTPException(status_code=400, detail="Este pedido ya tiene una venta registrada")
 
@@ -110,6 +114,11 @@ def crear_venta_desde_pedido(
     )
     if not pedido:
         raise HTTPException(status_code=404, detail="Pedido no encontrado")
+
+    if pedido.estado == "cancelado":
+        raise HTTPException(
+            status_code=400, detail="No se puede registrar una venta de un pedido cancelado"
+        )
 
     if db.query(Venta).filter(Venta.pedido_id == pedido_id).first():
         raise HTTPException(status_code=400, detail="Este pedido ya tiene una venta registrada")
@@ -234,6 +243,12 @@ def actualizar_estado_venta(
         raise HTTPException(status_code=404, detail="Venta no encontrada")
 
     venta.estado = datos.estado
+
+    # Si la venta se anula, su factura (si ya se emitió) también debe quedar
+    # anulada; si no, el dashboard seguiría sumándola en "Facturado".
+    if datos.estado == "anulada" and venta.factura and venta.factura.estado != "anulada":
+        venta.factura.estado = "anulada"
+
     db.commit()
     db.refresh(venta)
     return venta_a_out(venta)

@@ -14,6 +14,7 @@ import {
 import { useAuth } from "../../context/AuthContext";
 import {
   obtenerDashboardAdmin,
+  obtenerDashboardEmpleado,
   obtenerDashboardVentas,
   obtenerProductosAdmin,
   obtenerServiciosAdmin,
@@ -26,8 +27,13 @@ const TARJETAS_CONFIG = [
   { clave: "total_servicios", etiqueta: "Servicios", icono: "🎉", color: "amber" },
   { clave: "total_ventas", etiqueta: "Ventas", icono: "🧾", color: "emerald" },
   { clave: "total_facturado", etiqueta: "Facturado", icono: "💰", color: "violet", esMoneda: true },
+  { clave: "pqr_total", etiqueta: "PQR recibidas", icono: "📥", color: "sky" },
   { clave: "pqr_pendientes", etiqueta: "PQR pendientes", icono: "📨", color: "orange" },
 ];
+
+// Indicadores que solo ve el administrador. El backend tampoco los envía al
+// empleado (GET /api/dashboard/empleado), así que esto es solo presentación.
+const TARJETAS_SOLO_ADMIN = ["total_usuarios", "total_facturado", "pqr_total"];
 
 const ESTILOS_COLOR = {
   sky: "bg-skyblue-soft text-skyblue-deep",
@@ -79,7 +85,7 @@ export default function DashboardAdmin({ rol = "administrador" }) {
   const tarjetasVisibles =
     rol === "administrador"
       ? TARJETAS_CONFIG
-      : TARJETAS_CONFIG.filter((t) => !["total_usuarios", "total_facturado"].includes(t.clave));
+      : TARJETAS_CONFIG.filter((t) => !TARJETAS_SOLO_ADMIN.includes(t.clave));
 
   const cargarDatos = useCallback(async () => {
     setCargando(true);
@@ -95,34 +101,21 @@ export default function DashboardAdmin({ rol = "administrador" }) {
         cliente_id: clienteId || undefined,
       });
 
-      if (rol === "administrador") {
-        const [admin, ventas] = await Promise.all([obtenerDashboardAdmin(token), promesaVentas]);
-        setIndicadores(admin);
-        setSerieVentas(
-          ventas.serie.map((item) => ({
-            periodo: item.periodo,
-            Ventas: item.cantidad_ventas,
-            Total: item.total,
-          }))
-        );
-      } else {
-        // El empleado no tiene acceso a /dashboard/admin (solo administrador),
-        // así que solo consumimos la serie de ventas.
-        const ventas = await promesaVentas;
-        setIndicadores({
-          total_productos: null,
-          total_servicios: null,
-          total_ventas: ventas.cantidad_ventas_periodo,
-          pqr_pendientes: null,
-        });
-        setSerieVentas(
-          ventas.serie.map((item) => ({
-            periodo: item.periodo,
-            Ventas: item.cantidad_ventas,
-            Total: item.total,
-          }))
-        );
-      }
+      // Cada rol consume su propio endpoint de indicadores: el administrador
+      // recibe todos, el empleado solo los operativos.
+      const promesaIndicadores =
+        rol === "administrador" ? obtenerDashboardAdmin(token) : obtenerDashboardEmpleado(token);
+
+      const [resumen, ventas] = await Promise.all([promesaIndicadores, promesaVentas]);
+
+      setIndicadores(resumen);
+      setSerieVentas(
+        ventas.serie.map((item) => ({
+          periodo: item.periodo,
+          Ventas: item.cantidad_ventas,
+          Total: item.total,
+        }))
+      );
     } catch (err) {
       setError(err.message);
     } finally {
@@ -250,7 +243,7 @@ export default function DashboardAdmin({ rol = "administrador" }) {
       {error && <p className="mb-4 text-sm text-strawberry-deep">{error}</p>}
 
       {/* Cards de indicadores */}
-      <div className="grid grid-cols-2 gap-4 lg:grid-cols-3 xl:grid-cols-6">
+      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
         {tarjetasVisibles.map((cfg) => (
           <div
             key={cfg.clave}
@@ -265,8 +258,8 @@ export default function DashboardAdmin({ rol = "administrador" }) {
               {cargando || !indicadores
                 ? "…"
                 : cfg.esMoneda
-                ? numeroAPrecio(indicadores[cfg.clave])
-                : indicadores[cfg.clave]}
+                ? numeroAPrecio(indicadores[cfg.clave] ?? 0)
+                : indicadores[cfg.clave] ?? 0}
             </p>
             <p className="text-sm text-choco-soft">{cfg.etiqueta}</p>
           </div>

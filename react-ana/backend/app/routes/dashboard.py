@@ -13,35 +13,54 @@ from ..models import Cliente, DetalleVenta, Factura, PQR, Producto, Servicio, Us
 router = APIRouter(prefix="/api/dashboard", tags=["Dashboard"])
 
 
+def _indicadores_operativos(db: Session) -> dict:
+    """Indicadores que pueden ver tanto el administrador como el empleado.
+    No incluyen usuarios ni facturación, que son solo del administrador."""
+    total_productos = db.query(func.count(Producto.id)).scalar()
+    total_servicios = db.query(func.count(Servicio.id)).scalar()
+    total_ventas = db.query(func.count(Venta.id)).filter(Venta.estado != "anulada").scalar()
+    pqr_pendientes = (
+        db.query(func.count(PQR.id)).filter(PQR.estado.in_(["pendiente", "en_proceso"])).scalar()
+    )
+    return {
+        "total_productos": total_productos,
+        "total_servicios": total_servicios,
+        "total_ventas": total_ventas,
+        "pqr_pendientes": pqr_pendientes,
+    }
+
+
 @router.get("/admin")
 def dashboard_admin(
     db: Session = Depends(get_db),
     usuario_actual: Usuario = Depends(require_roles("administrador")),
 ):
     """Indicadores generales del sistema, solo para administrador."""
+    datos = _indicadores_operativos(db)
+
     total_usuarios = db.query(func.count(Usuario.id)).scalar()
-    total_productos = db.query(func.count(Producto.id)).scalar()
-    total_servicios = db.query(func.count(Servicio.id)).scalar()
-    total_ventas = db.query(func.count(Venta.id)).filter(Venta.estado != "anulada").scalar()
     total_facturado = (
         db.query(func.coalesce(func.sum(Factura.total), 0))
         .filter(Factura.estado == "emitida")
         .scalar()
     )
-    pqr_pendientes = (
-        db.query(func.count(PQR.id)).filter(PQR.estado.in_(["pendiente", "en_proceso"])).scalar()
-    )
     pqr_total = db.query(func.count(PQR.id)).scalar()
 
-    return {
-        "total_usuarios": total_usuarios,
-        "total_productos": total_productos,
-        "total_servicios": total_servicios,
-        "total_ventas": total_ventas,
-        "total_facturado": float(total_facturado),
-        "pqr_pendientes": pqr_pendientes,
-        "pqr_total": pqr_total,
-    }
+    datos["total_usuarios"] = total_usuarios
+    datos["total_facturado"] = float(total_facturado)
+    datos["pqr_total"] = pqr_total
+    return datos
+
+
+@router.get("/empleado")
+def dashboard_empleado(
+    db: Session = Depends(get_db),
+    usuario_actual: Usuario = Depends(require_roles("administrador", "empleado")),
+):
+    """Indicadores operativos para el panel de empleado. Devuelve solo lo que
+    un empleado puede ver: la restricción vive aquí en el backend, no solo en
+    lo que el frontend decide mostrar u ocultar."""
+    return _indicadores_operativos(db)
 
 
 @router.get("/ventas")
