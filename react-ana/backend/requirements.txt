@@ -31,3 +31,4 @@ reportlab
 openpyxl
 google-genai==2.23.0
 google-auth==2.58.0
+requests

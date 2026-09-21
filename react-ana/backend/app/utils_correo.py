@@ -1,8 +1,8 @@
+import base64
 import os
-import smtplib
-from email.mime.application import MIMEApplication
-from email.mime.multipart import MIMEMultipart
-from email.mime.text import MIMEText
+
+import requests
+
 from html import escape
 
 from .utils_factura_pdf import (
@@ -12,11 +12,13 @@ from .utils_factura_pdf import (
     formatear_moneda,
 )
 
-SMTP_HOST = os.getenv("BREVO_SMTP_HOST", "smtp-relay.brevo.com")
-SMTP_PORT = int(os.getenv("BREVO_SMTP_PORT", "587"))
-SMTP_USER = os.getenv("BREVO_SMTP_USER")
-SMTP_KEY = os.getenv("BREVO_SMTP_KEY")
+# --- Configuración de la API HTTP de Brevo (NO usa SMTP) ---------------------
+# Railway bloquea las conexiones SMTP salientes (puertos 25/465/587) en el
+# plan gratuito, así que enviamos los correos a través de la API HTTPS de
+# Brevo (puerto 443), que sí funciona sin restricciones.
+BREVO_API_KEY = os.getenv("BREVO_API_KEY")
 EMAIL_FROM = os.getenv("EMAIL_FROM", "no-reply@sweetice.com")
+BREVO_API_URL = "https://api.brevo.com/v3/smtp/email"
 
 
 def _enviar(
@@ -28,41 +30,48 @@ def _enviar(
     adjuntos=None,  # lista opcional de (nombre_archivo, bytes_pdf)
 ) -> None:
     """
-    Función interna compartida por todos los correos: arma el mensaje
-    (texto plano + HTML, y adjuntos PDF si los hay) y lo envía por Brevo SMTP.
+    Función interna compartida por todos los correos: arma el payload JSON
+    (texto plano + HTML, y adjuntos PDF en base64 si los hay) y lo envía
+    mediante la API HTTP de Brevo (https://api.brevo.com/v3/smtp/email).
 
-    Si BREVO_SMTP_USER / BREVO_SMTP_KEY no están configurados (por ejemplo
-    en desarrollo local), no falla la petición: solo imprime en consola
-    para que puedas seguir probando sin credenciales reales.
+    Si BREVO_API_KEY no está configurada (por ejemplo en desarrollo local),
+    no falla la petición: solo imprime en consola para que puedas seguir
+    probando sin credenciales reales.
     """
-    if not SMTP_USER or not SMTP_KEY:
-        print(f"[DEV] {etiqueta_dev} para {correo_destino} (correo no enviado, faltan credenciales SMTP)")
+    if not BREVO_API_KEY:
+        print(f"[DEV] {etiqueta_dev} para {correo_destino} (correo no enviado, falta BREVO_API_KEY)")
         return
 
-    cuerpo = MIMEMultipart("alternative")
-    cuerpo.attach(MIMEText(texto_plano, "plain", "utf-8"))
-    cuerpo.attach(MIMEText(html, "html", "utf-8"))
+    payload = {
+        "sender": {"name": "Sweet Ice", "email": EMAIL_FROM},
+        "to": [{"email": correo_destino}],
+        "subject": asunto,
+        "htmlContent": html,
+        "textContent": texto_plano,
+    }
 
     if adjuntos:
-        # Con adjuntos, el mensaje externo es "mixed": [cuerpo, pdf1, pdf2...]
-        mensaje = MIMEMultipart("mixed")
-        mensaje.attach(cuerpo)
-        for nombre_archivo, contenido in adjuntos:
-            parte = MIMEApplication(contenido, _subtype="pdf")
-            parte.add_header("Content-Disposition", "attachment", filename=nombre_archivo)
-            mensaje.attach(parte)
-    else:
-        mensaje = cuerpo
+        payload["attachment"] = [
+            {
+                "name": nombre_archivo,
+                "content": base64.b64encode(contenido).decode("utf-8"),
+            }
+            for nombre_archivo, contenido in adjuntos
+        ]
 
-    mensaje["Subject"] = asunto
-    mensaje["From"] = f"Sweet Ice <{EMAIL_FROM}>"
-    mensaje["To"] = correo_destino
+    headers = {
+        "accept": "application/json",
+        "api-key": BREVO_API_KEY,
+        "content-type": "application/json",
+    }
 
     try:
-        with smtplib.SMTP(SMTP_HOST, SMTP_PORT) as servidor:
-            servidor.starttls()
-            servidor.login(SMTP_USER, SMTP_KEY)
-            servidor.sendmail(EMAIL_FROM, [correo_destino], mensaje.as_string())
+        respuesta = requests.post(BREVO_API_URL, json=payload, headers=headers, timeout=15)
+        if respuesta.status_code >= 400:
+            print(
+                f"[ERROR envío de correo] {etiqueta_dev} a {correo_destino}: "
+                f"HTTP {respuesta.status_code} - {respuesta.text}"
+            )
     except Exception as error:
         # Un fallo de correo nunca debe tumbar el flujo principal (registro,
         # pedido, respuesta de PQR, etc.); lo dejamos registrado para depurar.
