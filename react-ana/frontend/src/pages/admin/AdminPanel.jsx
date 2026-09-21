@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useAuth } from "../../context/AuthContext";
-import DashboardLayout from "../../components/admin/DashboardLayout";
+import DashboardLayout from "../../components/Admin/DashboardLayout";
 import AdminResumen from "./AdminResumen";
 import DashboardAdmin from "./DashboardAdmin";
 import AdminPedidos from "./AdminPedidos";

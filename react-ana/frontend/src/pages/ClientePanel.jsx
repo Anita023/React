@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import DashboardLayout from "../components/admin/DashboardLayout";
+import DashboardLayout from "../components/Admin/DashboardLayout";
 import { misPedidos, obtenerPerfil, actualizarUsuario } from "../lib/api";
 import DashboardCliente from "./DashboardCliente";
 import MisPQR from "./MisPQR";
