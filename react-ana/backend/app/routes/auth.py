@@ -17,7 +17,7 @@ from ..schemas import (
     VerificarCodigoRequest,
     usuario_a_out,
 )
-from ..utils_correo import enviar_codigo_recuperacion
+from ..utils_correo import enviar_bienvenida, enviar_codigo_recuperacion
 
 router = APIRouter(prefix="/api", tags=["Autenticación"])
 
@@ -60,6 +60,15 @@ def registro(datos: UsuarioCreate, db: Session = Depends(get_db)):
         db.add(nuevo_cliente)
         db.commit()
         db.refresh(nuevo_usuario)
+
+        # El correo de bienvenida nunca debe tumbar el registro si falla
+        # (utils_correo ya atrapa sus propios errores internamente, pero
+        # nos protegemos también aquí por si acaso).
+        try:
+            enviar_bienvenida(nuevo_usuario.correo, datos.nombre)
+        except Exception:
+            pass
+
         return {"usuario": usuario_a_out(nuevo_usuario)}
     except ValueError as error:
         db.rollback()
