@@ -1,14 +1,14 @@
 import { useState } from "react";
 import { useAuth } from "../context/AuthContext";
 import DashboardLayout from "../components/Admin/DashboardLayout";
-import AdminPedidos from "./admin/AdminPedidos";
-import AdminProductos from "./admin/AdminProductos";
-import AdminServicios from "./admin/AdminServicios";
-import AdminUsuarios from "./admin/AdminUsuarios";
-import DashboardAdmin from "./admin/DashboardAdmin";
-import AdminPQR from "./admin/AdminPQR";
-import AdminVentas from "./admin/AdminVentas";
-import AdminFacturas from "./admin/AdminFacturas";
+import AdminPedidos from "./Admin/AdminPedidos";
+import AdminProductos from "./Admin/AdminProductos";
+import AdminServicios from "./Admin/AdminServicios";
+import AdminUsuarios from "./Admin/AdminUsuarios";
+import DashboardAdmin from "./Admin/DashboardAdmin";
+import AdminPQR from "./Admin/AdminPQR";
+import AdminVentas from "./Admin/AdminVentas";
+import AdminFacturas from "./Admin/AdminFacturas";
 
 const SECCIONES = [
   { id: "dashboard", etiqueta: "Dashboard", icono: "📊" },

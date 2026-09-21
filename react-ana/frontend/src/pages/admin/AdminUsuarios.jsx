@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
 import { useAuth } from "../../context/AuthContext";
-import PanelToolbar from "../../components/admin/PanelToolbar";
-import PanelModal from "../../components/admin/PanelModal";
-import ConfirmModal from "../../components/admin/ConfirmModal";
+import PanelToolbar from "../../components/Admin/PanelToolbar";
+import PanelModal from "../../components/Admin/PanelModal";
+import ConfirmModal from "../../components/Admin/ConfirmModal";
 import {
   obtenerUsuarios,
   crearUsuario,
