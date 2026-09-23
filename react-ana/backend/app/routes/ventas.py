@@ -1,5 +1,5 @@
 from datetime import date
-from decimal import Decimal
+from decimal import Decimal, ROUND_HALF_UP
 from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
@@ -12,6 +12,15 @@ from ..models import Cliente, DetalleVenta, Pedido, Producto, Servicio, Usuario,
 from ..schemas import VentaCreate, VentaEstadoUpdate, venta_a_out
 
 router = APIRouter(prefix="/api/ventas", tags=["Ventas"])
+
+# IVA aplicado a todas las ventas. Se calcula siempre aquí, en el servidor:
+# nunca se confía en un valor de "impuestos" que venga del cliente (Postman,
+# el formulario del admin, etc.), porque eso permitiría manipular el total.
+IVA_PORCENTAJE = Decimal("0.19")
+
+
+def _calcular_iva(subtotal: Decimal) -> Decimal:
+    return (subtotal * IVA_PORCENTAJE).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
 
 
 def _construir_detalles_desde_items(db: Session, items) -> tuple[list[DetalleVenta], Decimal]:
@@ -76,7 +85,9 @@ def crear_venta(
             raise HTTPException(status_code=400, detail="Este pedido ya tiene una venta registrada")
 
     detalles, subtotal = _construir_detalles_desde_items(db, datos.items)
-    total = subtotal - datos.descuento + datos.impuestos
+
+    impuestos = _calcular_iva(subtotal)
+    total = subtotal - datos.descuento + impuestos
     if total < 0:
         raise HTTPException(status_code=400, detail="El total no puede ser negativo")
 
@@ -86,7 +97,7 @@ def crear_venta(
         pedido_id=datos.pedido_id,
         subtotal=subtotal,
         descuento=datos.descuento,
-        impuestos=datos.impuestos,
+        impuestos=impuestos,
         total=total,
         estado="completada",
     )
@@ -163,14 +174,17 @@ def crear_venta_desde_pedido(
     if not detalles:
         raise HTTPException(status_code=400, detail="El pedido no tiene productos ni servicios")
 
+    impuestos = _calcular_iva(subtotal)
+    total = subtotal + impuestos
+
     venta = Venta(
         cliente_id=cliente.id,
         usuario_id=usuario_actual.id,
         pedido_id=pedido.id,
         subtotal=subtotal,
         descuento=Decimal("0"),
-        impuestos=Decimal("0"),
-        total=subtotal,
+        impuestos=impuestos,
+        total=total,
         estado="completada",
     )
     venta.detalles = detalles

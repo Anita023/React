@@ -8,6 +8,54 @@ const MENSAJE_BIENVENIDA = {
     "¡Hola! 🍦 Soy el asistente de Sweet Ice. Puedo ayudarte con información sobre productos, servicios, cómo hacer un pedido, o si quieres registrar una petición, queja o reclamo. ¿En qué te ayudo?",
 };
 
+/** Ícono de robot con helado, dibujado en SVG (sin depender de ningún
+ * archivo de imagen externo). `size` controla el tamaño en px. */
+function RobotHeladoIcon({ size = 30 }) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 64 64"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      {/* Antena */}
+      <line x1="32" y1="14" x2="32" y2="6" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" />
+
+      {/* Helado en la punta de la antena (cono + bola) */}
+      <circle cx="32" cy="4" r="4.5" fill="#fbcfe8" />
+      <path d="M28.5 5 L35.5 5 L32 10 Z" fill="#deb887" />
+
+      {/* Cabeza del robot */}
+      <rect x="12" y="14" width="40" height="32" rx="10" fill="#fff" />
+      <rect x="12" y="14" width="40" height="32" rx="10" stroke="#db2777" strokeWidth="2" />
+
+      {/* Ojos */}
+      <circle cx="24" cy="30" r="4" fill="#db2777" />
+      <circle cx="40" cy="30" r="4" fill="#db2777" />
+      <circle cx="25.3" cy="28.7" r="1.1" fill="#fff" />
+      <circle cx="41.3" cy="28.7" r="1.1" fill="#fff" />
+
+      {/* Sonrisa */}
+      <path
+        d="M22 37 Q32 44 42 37"
+        stroke="#db2777"
+        strokeWidth="2.5"
+        strokeLinecap="round"
+        fill="none"
+      />
+
+      {/* Mejillas */}
+      <circle cx="17" cy="34" r="2.4" fill="#fbcfe8" />
+      <circle cx="47" cy="34" r="2.4" fill="#fbcfe8" />
+
+      {/* Antenitas laterales tipo orejas */}
+      <rect x="8" y="24" width="4" height="10" rx="2" fill="#db2777" />
+      <rect x="52" y="24" width="4" height="10" rx="2" fill="#db2777" />
+    </svg>
+  );
+}
+
 export default function ChatWidget() {
   const { token } = useAuth();
 
@@ -55,14 +103,14 @@ export default function ChatWidget() {
         aria-label={abierto ? "Cerrar chat" : "Abrir chat de ayuda"}
         className="fixed bottom-24 right-6 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-[#db2777] text-2xl text-white shadow-lift ring-4 ring-white/40 transition-all hover:-translate-y-0.5 sm:bottom-28 sm:right-8"
       >
-        {abierto ? "✕" : "💬"}
+        {abierto ? "✕" : <RobotHeladoIcon size={32} />}
       </button>
 
       {abierto && (
         <div className="fixed bottom-[184px] right-6 z-40 flex h-[480px] w-[340px] max-w-[calc(100vw-3rem)] flex-col overflow-hidden rounded-2xl border border-[#f1e4d8] bg-white shadow-2xl sm:right-8">
           {/* Encabezado */}
           <div className="flex items-center gap-2 bg-[#db2777] px-4 py-3 text-white">
-            <span className="text-lg">🍦</span>
+            <RobotHeladoIcon size={26} />
             <div>
               <p className="text-sm font-semibold leading-tight">Sweet Ice</p>
               <p className="text-xs leading-tight text-white/80">Asistente virtual</p>
