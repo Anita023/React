@@ -59,14 +59,30 @@ def _pedido_a_dict(pedido: Pedido, incluir_cliente: bool = False, incluir_detall
 
 def _datos_para_factura(pedido: Pedido, usuario: Usuario, detalles: list) -> dict:
     """Copia a datos simples (sin objetos SQLAlchemy) lo que necesita el
-    correo/PDF. Se llama dentro del endpoint, mientras la sesión sigue abierta."""
+    correo/PDF. Se llama dentro del endpoint, mientras la sesión sigue abierta.
+
+    IMPORTANTE: pedido.total es la suma de precios SIN IVA (así se calcula en
+    crear_pedido_desde_carrito, para que coincida con lo que el cliente ve en
+    su carrito). Para la factura sí debe aparecer el IVA, así que aquí se
+    calcula subtotal/impuestos/total de forma consistente para el PDF,
+    sin modificar el total del pedido guardado en la base de datos.
+    """
+    IVA_PORCENTAJE = 0.19  # debe coincidir con IVA_PORCENTAJE de utils_factura_pdf.py
+
     cliente = usuario.cliente
+
+    subtotal = sum(float(d["precio"]) * d["cantidad"] for d in detalles)
+    impuestos = round(subtotal * IVA_PORCENTAJE, 2)
+    total_con_iva = subtotal + impuestos
+
     return {
         "id": pedido.id,
         "fecha": pedido.creado_en,
         "estado": pedido.estado,
         "metodo_pago": pedido.metodo_pago,
-        "total": float(pedido.total),
+        "subtotal": subtotal,
+        "impuestos": impuestos,
+        "total": total_con_iva,
         "cliente_nombre": f"{cliente.nombre} {cliente.apellido}" if cliente else (usuario.nombre or "Cliente"),
         "cliente_documento": cliente.numero_documento if cliente else "N/A",
         "cliente_direccion": cliente.direccion if cliente else "N/A",

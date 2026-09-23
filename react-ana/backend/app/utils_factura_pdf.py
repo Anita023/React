@@ -35,7 +35,7 @@ ETIQUETAS_ESTADO_PEDIDO = {
 
 # Ruta al logo real del negocio. Vive en backend/app/assets/logo.jpeg,
 # es decir, un nivel arriba de este archivo (app/utils_factura_pdf.py -> app/assets/logo.jpeg).
-RUTA_LOGO = os.path.join(os.path.dirname(__file__), "assets", "logo.jpeg")
+RUTA_LOGO = os.path.join(os.path.dirname(__file__), "assets", "img", "logo.jpeg")
 
 
 def formatear_moneda(valor) -> str:
