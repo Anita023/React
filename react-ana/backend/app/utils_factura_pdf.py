@@ -1,4 +1,5 @@
 import io
+import os
 from datetime import datetime
 from typing import Optional, Sequence, Tuple
 from xml.sax.saxutils import escape
@@ -8,7 +9,7 @@ from reportlab.lib.pagesizes import letter
 from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.lib.units import cm
 from reportlab.graphics.shapes import Drawing, Circle, Polygon
-from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer, Table, TableStyle
+from reportlab.platypus import Image, Paragraph, SimpleDocTemplate, Spacer, Table, TableStyle
 
 # --- Datos fijos del negocio (ficticios, ajústalos cuando tengas los reales) ---
 NOMBRE_NEGOCIO = "Sweet Ice"
@@ -32,6 +33,10 @@ ETIQUETAS_ESTADO_PEDIDO = {
     "cancelado": "Cancelado",
 }
 
+# Ruta al logo real del negocio. Vive en backend/app/assets/logo.jpeg,
+# es decir, un nivel arriba de este archivo (app/utils_factura_pdf.py -> app/assets/logo.jpeg).
+RUTA_LOGO = os.path.join(os.path.dirname(__file__), "assets", "logo.jpeg")
+
 
 def formatear_moneda(valor) -> str:
     """12000 -> $12.000 (mismo formato es-CO que usa el frontend)."""
@@ -39,8 +44,9 @@ def formatear_moneda(valor) -> str:
 
 
 def _logo_helado() -> Drawing:
-    """Logo simple dibujado en vectores: un cono de helado. No depende de
-    ningún archivo de imagen externo, así que siempre se puede generar."""
+    """Logo de respaldo dibujado en vectores: un cono de helado. Solo se usa
+    si el archivo de logo real (RUTA_LOGO) no se encuentra, así el PDF nunca
+    se rompe por falta de la imagen."""
     d = Drawing(40, 46)
     # Cono (triángulo color caramelo)
     d.add(Polygon(points=[8, 4, 32, 4, 20, -2], fillColor=colors.HexColor("#deb887"), strokeColor=None))
@@ -52,6 +58,17 @@ def _logo_helado() -> Drawing:
     # Cereza
     d.add(Circle(20, 43, 3, fillColor=colors.HexColor("#db2777"), strokeColor=None))
     return d
+
+
+def _obtener_logo():
+    """Devuelve el logo real de Sweet Ice si el archivo existe en RUTA_LOGO;
+    si no, cae de vuelta al ícono vectorial genérico para que el PDF nunca falle."""
+    if os.path.isfile(RUTA_LOGO):
+        try:
+            return Image(RUTA_LOGO, width=46, height=46)
+        except Exception as error:
+            print(f"[ERROR cargando logo en factura PDF] {error}")
+    return _logo_helado()
 
 
 def construir_pdf_factura(
@@ -111,7 +128,7 @@ def construir_pdf_factura(
         Paragraph(TELEFONO_NEGOCIO, estilos["Normal"]),
     ]
     tabla_encabezado = Table(
-        [[_logo_helado(), encabezado_negocio]],
+        [[_obtener_logo(), encabezado_negocio]],
         colWidths=[55, 400],
     )
     tabla_encabezado.setStyle(
