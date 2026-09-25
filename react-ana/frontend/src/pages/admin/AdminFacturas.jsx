@@ -1,5 +1,6 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useAuth } from "../../context/AuthContext";
+import Paginacion, { paginar } from "../../components/Admin/Paginacion";
 import { listarFacturas, descargarFacturaPDF, descargarBlob } from "../../lib/api";
 
 function numeroAPrecio(numero) {
@@ -18,6 +19,7 @@ export default function AdminFacturas() {
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState("");
   const [descargandoId, setDescargandoId] = useState(null);
+  const [paginaActual, setPaginaActual] = useState(1);
 
   const [filtros, setFiltros] = useState({
     numero_factura: "",
@@ -45,6 +47,17 @@ export default function AdminFacturas() {
     cargarFacturas();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filtros]);
+
+  // Si cambian los filtros, volvemos a la página 1.
+  useEffect(() => {
+    setPaginaActual(1);
+  }, [filtros]);
+
+  const totalPaginas = Math.max(1, Math.ceil(facturas.length / 10));
+  const facturasPaginadas = useMemo(
+    () => paginar(facturas, paginaActual),
+    [facturas, paginaActual]
+  );
 
   function manejarCambioFiltro(e) {
     setFiltros((prev) => ({ ...prev, [e.target.name]: e.target.value }));
@@ -128,7 +141,7 @@ export default function AdminFacturas() {
                 </tr>
               </thead>
               <tbody>
-                {facturas.map((f) => (
+                {facturasPaginadas.map((f) => (
                   <tr
                     key={f.id}
                     className="border-b border-border-soft last:border-0 hover:bg-cream/40"
@@ -172,6 +185,12 @@ export default function AdminFacturas() {
             </table>
           </div>
         )}
+
+        <Paginacion
+          paginaActual={paginaActual}
+          totalPaginas={totalPaginas}
+          onCambiarPagina={setPaginaActual}
+        />
       </div>
     </div>
   );

@@ -3,6 +3,7 @@ import { useAuth } from "../../context/AuthContext";
 import PanelToolbar from "../../components/Admin/PanelToolbar";
 import PanelModal from "../../components/Admin/PanelModal";
 import ConfirmModal from "../../components/Admin/ConfirmModal";
+import Paginacion, { paginar } from "../../components/Admin/Paginacion";
 import {
   obtenerUsuarios,
   crearUsuario,
@@ -72,6 +73,7 @@ export default function AdminUsuarios({
 
   const [busqueda, setBusqueda] = useState("");
   const [filtroEstado, setFiltroEstado] = useState("todos");
+  const [paginaActual, setPaginaActual] = useState(1);
 
   const [mostrarFormulario, setMostrarFormulario] = useState(false);
   const [formulario, setFormulario] = useState(FORMULARIO_VACIO);
@@ -176,6 +178,16 @@ export default function AdminUsuarios({
       return coincideTexto && coincideEstado;
     });
   }, [usuarios, busqueda, filtroEstado]);
+
+  useEffect(() => {
+    setPaginaActual(1);
+  }, [busqueda, filtroEstado]);
+
+  const totalPaginas = Math.max(1, Math.ceil(usuariosFiltrados.length / 10));
+  const usuariosPaginados = useMemo(
+    () => paginar(usuariosFiltrados, paginaActual),
+    [usuariosFiltrados, paginaActual]
+  );
 
   function manejarCambioFormulario(e) {
     const { name, value } = e.target;
@@ -336,7 +348,7 @@ export default function AdminUsuarios({
                 </tr>
               </thead>
               <tbody>
-                {usuariosFiltrados.map((usuario) => {
+                {usuariosPaginados.map((usuario) => {
                   const esUsuarioActual = usuario.id === usuarioActual?.id;
 
                   return (
@@ -393,6 +405,12 @@ export default function AdminUsuarios({
             </table>
           </div>
         )}
+
+        <Paginacion
+          paginaActual={paginaActual}
+          totalPaginas={totalPaginas}
+          onCambiarPagina={setPaginaActual}
+        />
       </div>
 
       <PanelModal

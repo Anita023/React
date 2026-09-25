@@ -1,5 +1,6 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useAuth } from "../../context/AuthContext";
+import Paginacion, { paginar } from "../../components/Admin/Paginacion";
 import { listarPQR, responderPQR, cambiarEstadoPQR } from "../../lib/api";
 
 const ESTILOS_ESTADO = {
@@ -32,6 +33,7 @@ export default function AdminPQR() {
   const [error, setError] = useState("");
   const [mensaje, setMensaje] = useState("");
   const [filtroEstado, setFiltroEstado] = useState("");
+  const [paginaActual, setPaginaActual] = useState(1);
 
   const [pqrEnRespuesta, setPqrEnRespuesta] = useState(null);
   const [textoRespuesta, setTextoRespuesta] = useState("");
@@ -50,6 +52,14 @@ export default function AdminPQR() {
     cargarLista();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filtroEstado]);
+
+  // Si cambia el filtro, volvemos a la página 1.
+  useEffect(() => {
+    setPaginaActual(1);
+  }, [filtroEstado]);
+
+  const totalPaginas = Math.max(1, Math.ceil(lista.length / 10));
+  const listaPaginada = useMemo(() => paginar(lista, paginaActual), [lista, paginaActual]);
 
   function abrirRespuesta(item) {
     setPqrEnRespuesta(item);
@@ -127,7 +137,7 @@ export default function AdminPQR() {
                 </tr>
               </thead>
               <tbody>
-                {lista.map((item) => (
+                {listaPaginada.map((item) => (
                   <tr
                     key={item.id}
                     className="border-b border-border-soft last:border-0 hover:bg-cream/40"
@@ -174,6 +184,12 @@ export default function AdminPQR() {
             </table>
           </div>
         )}
+
+        <Paginacion
+          paginaActual={paginaActual}
+          totalPaginas={totalPaginas}
+          onCambiarPagina={setPaginaActual}
+        />
       </div>
 
       {/* Panel modal simple para responder */}

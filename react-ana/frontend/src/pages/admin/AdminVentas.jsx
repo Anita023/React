@@ -12,6 +12,7 @@ import {
   descargarReporteVentasExcel,
   descargarBlob,
 } from "../../lib/api";
+import Paginacion, { paginar } from "../../components/Admin/Paginacion";
 
 function numeroAPrecio(numero) {
   return "$" + Number(numero).toLocaleString("es-CO");
@@ -36,6 +37,7 @@ export default function AdminVentas() {
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState("");
   const [mensaje, setMensaje] = useState("");
+  const [paginaActual, setPaginaActual] = useState(1);
 
   const [filtros, setFiltros] = useState({
     fecha_inicio: "",
@@ -74,6 +76,13 @@ export default function AdminVentas() {
     cargarVentas();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filtros]);
+
+  useEffect(() => {
+    setPaginaActual(1);
+  }, [filtros]);
+
+  const totalPaginas = Math.max(1, Math.ceil(ventas.length / 10));
+  const ventasPaginadas = useMemo(() => paginar(ventas, paginaActual), [ventas, paginaActual]);
 
   useEffect(() => {
     Promise.all([
@@ -444,7 +453,7 @@ export default function AdminVentas() {
                 </tr>
               </thead>
               <tbody>
-                {ventas.map((v) => (
+                {ventasPaginadas.map((v) => (
                   <tr
                     key={v.id}
                     className="border-b border-border-soft last:border-0 hover:bg-cream/40"
@@ -497,6 +506,12 @@ export default function AdminVentas() {
             </table>
           </div>
         )}
+
+        <Paginacion
+          paginaActual={paginaActual}
+          totalPaginas={totalPaginas}
+          onCambiarPagina={setPaginaActual}
+        />
       </div>
     </div>
   );

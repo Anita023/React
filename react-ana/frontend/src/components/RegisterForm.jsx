@@ -60,6 +60,40 @@ function BotonOjo({ visible, onClick, etiqueta }) {
   );
 }
 
+// Modal que confirma el registro exitoso. Se muestra encima del formulario
+// (por eso el fixed inset-0) sin depender de ningún Modal externo.
+function ModalRegistroExitoso({ correo, onContinuar }) {
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-choco-deep/40 px-4">
+      <div className="w-full max-w-sm rounded-3xl bg-white p-6 text-center shadow-soft">
+        <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-strawberry-soft">
+          <svg
+            viewBox="0 0 24 24"
+            className="h-8 w-8 fill-none stroke-strawberry-deep"
+            strokeWidth="2.5"
+          >
+            <path d="M5 13l4 4L19 7" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        </div>
+
+        <h3 className="mb-2 text-xl font-semibold text-choco-deep">
+          ¡Cuenta creada con éxito! 🍦
+        </h3>
+
+        <p className="mb-6 text-sm text-choco-soft">
+          Ya puedes iniciar sesión con{" "}
+          <span className="font-semibold">{correo}</span> y la contraseña que
+          elegiste.
+        </p>
+
+        <Button type="button" variant="secondary" className="w-full" onClick={onContinuar}>
+          Ir a iniciar sesión
+        </Button>
+      </div>
+    </div>
+  );
+}
+
 /**
  * Formulario de registro de clientes. Se usa dentro del Modal
  * que se abre desde Login ("Crear cuenta"). Valida en tiempo real
@@ -72,6 +106,8 @@ function RegisterForm({ onRegistroExitoso }) {
   const [mensajeServidor, setMensajeServidor] = useState("");
   const [verPassword, setVerPassword] = useState(false);
   const [verConfirmarPassword, setVerConfirmarPassword] = useState(false);
+  const [modalExitoAbierto, setModalExitoAbierto] = useState(false);
+  const [correoRegistrado, setCorreoRegistrado] = useState("");
 
   const validarCampo = (name, value, formularioActual) => {
     switch (name) {
@@ -176,10 +212,10 @@ function RegisterForm({ onRegistroExitoso }) {
     try {
       await registrarUsuario(formulario);
 
-      const correoRegistrado = formulario.correo;
+      setCorreoRegistrado(formulario.correo);
       setFormulario(VACIO);
       setErrores({});
-      onRegistroExitoso?.(correoRegistrado);
+      setModalExitoAbierto(true);
     } catch (error) {
       setMensajeServidor(error.message);
     } finally {
@@ -187,8 +223,17 @@ function RegisterForm({ onRegistroExitoso }) {
     }
   };
 
+  const cerrarModalExito = () => {
+    setModalExitoAbierto(false);
+    onRegistroExitoso?.(correoRegistrado);
+  };
+
   return (
     <div>
+      {modalExitoAbierto && (
+        <ModalRegistroExitoso correo={correoRegistrado} onContinuar={cerrarModalExito} />
+      )}
+
       <div className="mb-4 flex justify-center">
         <Link to="/" className="inline-flex items-center justify-center">
           <img

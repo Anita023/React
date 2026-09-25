@@ -3,6 +3,7 @@ import { useAuth } from "../../context/AuthContext";
 import PanelToolbar from "../../components/Admin/PanelToolbar";
 import PanelModal from "../../components/Admin/PanelModal";
 import ConfirmModal from "../../components/Admin/ConfirmModal";
+import Paginacion, { paginar } from "../../components/Admin/Paginacion";
 import {
   obtenerProductosAdmin,
   crearProducto,
@@ -45,6 +46,7 @@ export default function AdminProductos({
 
   const [busqueda, setBusqueda] = useState("");
   const [filtroEstado, setFiltroEstado] = useState("todos");
+  const [paginaActual, setPaginaActual] = useState(1);
 
   const [mostrarFormulario, setMostrarFormulario] = useState(false);
   const [formulario, setFormulario] = useState(FORMULARIO_VACIO);
@@ -150,6 +152,18 @@ export default function AdminProductos({
       return coincideTexto && coincideEstado;
     });
   }, [productos, busqueda, filtroEstado]);
+
+  // Si el usuario busca o cambia el filtro, siempre volvemos a la página 1
+  // (si no, podría quedar "atrapado" en una página que ya no existe).
+  useEffect(() => {
+    setPaginaActual(1);
+  }, [busqueda, filtroEstado]);
+
+  const totalPaginas = Math.max(1, Math.ceil(productosFiltrados.length / 10));
+  const productosPaginados = useMemo(
+    () => paginar(productosFiltrados, paginaActual),
+    [productosFiltrados, paginaActual]
+  );
 
   function manejarCambio(e) {
     const { name, value } = e.target;
@@ -409,7 +423,7 @@ export default function AdminProductos({
                 </tr>
               </thead>
               <tbody>
-                {productosFiltrados.map((producto) => (
+                {productosPaginados.map((producto) => (
                   <tr
                     key={producto.id}
                     className="border-b border-border-soft last:border-0 hover:bg-cream/40"
@@ -466,6 +480,12 @@ export default function AdminProductos({
             </table>
           </div>
         )}
+
+        <Paginacion
+          paginaActual={paginaActual}
+          totalPaginas={totalPaginas}
+          onCambiarPagina={setPaginaActual}
+        />
       </div>
 
       <PanelModal

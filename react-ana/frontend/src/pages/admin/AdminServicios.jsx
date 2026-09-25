@@ -3,6 +3,7 @@ import { useAuth } from "../../context/AuthContext";
 import PanelToolbar from "../../components/Admin/PanelToolbar";
 import PanelModal from "../../components/Admin/PanelModal";
 import ConfirmModal from "../../components/Admin/ConfirmModal";
+import Paginacion, { paginar } from "../../components/Admin/Paginacion";
 import {
   obtenerServiciosAdmin,
   crearServicio,
@@ -32,6 +33,7 @@ export default function AdminServicios({
 
   const [busqueda, setBusqueda] = useState("");
   const [filtroEstado, setFiltroEstado] = useState("todos");
+  const [paginaActual, setPaginaActual] = useState(1);
 
   const [mostrarFormulario, setMostrarFormulario] = useState(false);
   const [formulario, setFormulario] = useState(FORMULARIO_VACIO);
@@ -119,6 +121,16 @@ export default function AdminServicios({
       return coincideTexto && coincideEstado;
     });
   }, [servicios, busqueda, filtroEstado]);
+
+  useEffect(() => {
+    setPaginaActual(1);
+  }, [busqueda, filtroEstado]);
+
+  const totalPaginas = Math.max(1, Math.ceil(serviciosFiltrados.length / 10));
+  const serviciosPaginados = useMemo(
+    () => paginar(serviciosFiltrados, paginaActual),
+    [serviciosFiltrados, paginaActual]
+  );
 
   function manejarCambio(e) {
     const { name, value } = e.target;
@@ -263,7 +275,7 @@ export default function AdminServicios({
                 </tr>
               </thead>
               <tbody>
-                {serviciosFiltrados.map((servicio) => (
+                {serviciosPaginados.map((servicio) => (
                   <tr
                     key={servicio.id}
                     className="border-b border-border-soft last:border-0 hover:bg-cream/40"
@@ -324,6 +336,12 @@ export default function AdminServicios({
             </table>
           </div>
         )}
+
+        <Paginacion
+          paginaActual={paginaActual}
+          totalPaginas={totalPaginas}
+          onCambiarPagina={setPaginaActual}
+        />
       </div>
 
       <PanelModal

@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import PanelToolbar from "../../components/Admin/PanelToolbar";
 import PanelModal from "../../components/Admin/PanelModal";
+import Paginacion, { paginar } from "../../components/Admin/Paginacion";
 import {
   listarTodosLosPedidos,
   actualizarEstadoPedido,
@@ -43,6 +44,7 @@ export default function AdminPedidos({
 
   const [busqueda, setBusqueda] = useState("");
   const [filtroEstado, setFiltroEstado] = useState("todos");
+  const [paginaActual, setPaginaActual] = useState(1);
 
   const [productos, setProductos] = useState([]);
   const [mostrarFormulario, setMostrarFormulario] = useState(false);
@@ -99,6 +101,16 @@ export default function AdminPedidos({
       return coincideTexto && coincideEstado;
     });
   }, [pedidos, busqueda, filtroEstado]);
+
+  useEffect(() => {
+    setPaginaActual(1);
+  }, [busqueda, filtroEstado]);
+
+  const totalPaginas = Math.max(1, Math.ceil(pedidosFiltrados.length / 10));
+  const pedidosPaginados = useMemo(
+    () => paginar(pedidosFiltrados, paginaActual),
+    [pedidosFiltrados, paginaActual]
+  );
 
   async function manejarCambioEstado(id, nuevoEstado) {
     setMensaje("");
@@ -242,7 +254,7 @@ export default function AdminPedidos({
                 </tr>
               </thead>
               <tbody>
-                {pedidosFiltrados.map((pedido) => (
+                {pedidosPaginados.map((pedido) => (
                   <tr
                     key={pedido.id}
                     className="border-b border-border-soft last:border-0 hover:bg-cream/40"
@@ -286,6 +298,12 @@ export default function AdminPedidos({
             </table>
           </div>
         )}
+
+        <Paginacion
+          paginaActual={paginaActual}
+          totalPaginas={totalPaginas}
+          onCambiarPagina={setPaginaActual}
+        />
       </div>
 
       <PanelModal
